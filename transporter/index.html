@@ -4,13 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport Controller</title>
+    <title>Transporter</title>
 </head>
 
-<body style="background-color: #333;">
+<body>
+    <h1>Transporter &lpar;<a href="../index.html">go back</a>&rpar;</h1>
+
     <div id="transportDiv" style="display: none;">
         <button id="prevBtn" class="transportButton" property="disabled" command-change="115" state-key="cannotPrevious"
-            disabled>&lt;</button>
+            disabled> &lt; </button>
         <button id="playBtn" class="transportButton" property="disabled" command-change="116" state-key="cannotPlay"
             disabled>Play</button>
         <button id="pauseBtn" class="transportButton" property="disabled" command-change="117" state-key="cannotPause"
@@ -25,8 +27,8 @@
         </div>
     </div>
 
-    <script src="generic.js"></script>
-    <script src="transport.js"></script>
+    <script src="../generic.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
