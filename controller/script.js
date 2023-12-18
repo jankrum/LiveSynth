@@ -1,212 +1,113 @@
-console.log('The controller');
+//------------------------ SELECTORS FOR HTML ELEMENTS ------------------------
+const CASE_SELECTOR = '.case';
+const MODULE_SELECTOR = '.module';
+const LABEL_SELECTOR = 'h3';
+const KNOB_SELECTOR = 'input';
 
-// //------------------------ SELECTORS FOR HTML ELEMENTS ------------------------
-// const CASE_SELECTOR = ".case";
-// const MODULE_SELECTOR = ".module";
-// const LABEL_SELECTOR = "h3";
-// const KNOB_SELECTOR = "input";
+//------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
+/**
+ * Sets up responding to MIDI messages and starts the handshake
+ * @param {MIDIInput} inputFromSequencer
+ * @param {MIDIOutput} outputToSequencer
+ */
+function setUpMIDI(inputFromSequencer, outputToSequencer) {
+    /**
+    * Responds to loopback calls with a loopback call, for the handshake
+    * @param {Int8Array} data
+    */
+    function dealWithLoopbackCalls(data) {
+        if (isLoopbackCall(data)) {
+            console.debug('Heard a loopback call');
+            outputToSequencer.send(LOOPBACK_CALL);
+            return true;
+        }
+    }
 
+    /**
+     * Given a new label for the controller, display it
+     * @param {Object} param0 - destructured into index and labelArray
+     */
+    function applyState({ index, labelArray }) {
+        // For newlines
+        const labelsForBrowser = labelArray.map(x => x.replace('\n', '<br>'));
+        const controllerModules = document.querySelectorAll(MODULE_SELECTOR);
+        const moduleDiv = controllerModules[index];
+        const knobInput = moduleDiv.querySelector(KNOB_SELECTOR);
+        const labelHeader = moduleDiv.querySelector(LABEL_SELECTOR);
+        const commandChange = knobInput.getAttribute('command-change');
 
-// //-----------------------------------------------------------------------------------------------------------------------------//
-// //  Javascript that modifies the DOM initially
-// //-----------------------------------------------------------------------------------------------------------------------------//
+        knobInput.oninput = () => {
+            labelHeader.innerHTML = labelsForBrowser[knobInput.value];
+        };
 
-// /**
-//  * Builds the MIDI controller by duplicating its intial module
-//  */
-// function buildController() {
-//     const MODULE_COUNT = 12;
+        labelHeader.innerHTML = labelsForBrowser[knobInput.value];
 
-//     const caseDiv = document.querySelector(CASE_SELECTOR);
-//     const originalModule = caseDiv.querySelector(MODULE_SELECTOR);
+        outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
+    }
 
-//     for (let i = 2; i <= MODULE_COUNT; i++) {
-//         const cloneModule = originalModule.cloneNode(true);
-//         caseDiv.appendChild(cloneModule);
-//     }
-// }
+    /**
+    * Take the data from a sysex message then update and unlock the transport
+    * @param {Int8Array} data
+    */
+    function dealWithSysex(data) {
+        if (isSysexMessage(data)) {
+            console.debug('Heard a sysex message');
+            console.log(data);
+            try {
+                const sysexData = getObjectFromJSONSysex(data);
+                sysexData.controllerState.forEach(applyState);
+            } catch (error) {
+                alert(error.message);
+                console.error(error);
+            }
 
+            return true;
+        }
+    }
 
-// //-----------------------------------------------------------------------------------------------------------------------------//
-// //  Uses MIDI to populate the selects, potentially disable elements, and store port values with options
-// //-----------------------------------------------------------------------------------------------------------------------------//
+    inputFromSequencer.onmidimessage = createCallbackFromHandlerFunctions([
+        dealWithLoopbackCalls,
+        dealWithSysex
+    ]);
 
-// /**
-//  * Adds every port in midiMap as an option in the given select
-//  * @param midiMap 
-//  * @param selectToAddOptions 
-//  */
-// function addPortsAsOptionsToSelect(midiMap, selectToAddOptions) {
-//     for (const [key, { name }] of midiMap) {
-//         const connectionOption = document.createElement("option");
-//         connectionOption.text = name;
-//         connectionOption.value = key;
-//         selectToAddOptions.appendChild(connectionOption);
-//     }
-// }
+    outputToSequencer.send(LOOPBACK_REQUEST);
 
-// /**
-//  * Given a select, disables it and adds an option displaying "No Ports"
-//  * @param selectToDisable 
-//  */
-// function disableSelect(selectToDisable) {
-//     const connectionOption = document.createElement("option");
-//     connectionOption.text = "No Ports";
-//     selectToDisable.appendChild(connectionOption);
+    function setUpKnob(knobInput) {
+        const commandChange = knobInput.getAttribute('command-change');
 
-//     selectToDisable.disabled = true;
-// }
+        knobInput.onchange = () => {
+            outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
+        };
+    }
 
-// /**
-//  * Disables the "apply" button
-//  */
-// function disableApplyButton() {
-//     const applyButton = document.querySelector(APPLY_SELECTOR);
-//     applyButton.disabled = true;
-// }
+    const knobInputs = document.querySelectorAll(KNOB_SELECTOR);
+    knobInputs.forEach(setUpKnob);
 
-// /**
-//  * Will add the ports of a MIDI Map to a select or disable it if there are not any
-//  * @param {*} midiMap 
-//  * @param {string} selectID 
-//  */
-// function populateSelect(midiMap, selectID) {
-//     const select = document.querySelector(selectID);
+    const caseDiv = document.querySelector(CASE_SELECTOR);
+    caseDiv.style.display = 'block';
 
-//     if (midiMap.size > 0) {
-//         addPortsAsOptionsToSelect(midiMap, select);
-//     } else {
-//         disableSelect(select);
-//         disableApplyButton();
-//     }
-// }
+    console.debug('MIDI has been set up');
+}
 
-// /**
-//  * Gets the browser's MIDI inputs and outputs, and puts them into their selects
-//  */
-// async function putPortsInSelects() {
-//     const { inputs, outputs } = await navigator.requestMIDIAccess();
-//     populateSelect(inputs, MIDI_INPUT_SELECTOR);
-//     populateSelect(outputs, MIDI_OUTPUT_SELECTOR);
-// }
+//------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
+/**
+ * Gets the ports we want, then use them to set up responding to MIDI messages
+ */
+async function main() {
+    const PORTS = [
+        { relationship: 'SequencerToController', direction: 'inputs' },
+        { relationship: 'ControllerToSequencer', direction: 'outputs' }
+    ];
 
+    try {
+        const [inputFromSequencer, outputToSequencer] =
+            await getDesiredPorts(PORTS);
+        setUpMIDI(inputFromSequencer, outputToSequencer);
+    } catch (error) {
+        alert(error.message);
+        console.error(error);
+    }
+}
 
-// //-----------------------------------------------------------------------------------------------------------------------------//
-// //  Transforms the page and starts MIDI functionality
-// //-----------------------------------------------------------------------------------------------------------------------------//
-
-// /**
-//  * Changes visibility for MIDI connector and controller case
-//  */
-// function hideConnectorAndShowCase() {
-//     const connectorDiv = document.querySelector(CONNECTOR_SELECTOR);
-//     const caseDiv = document.querySelector(CASE_SELECTOR);
-
-//     connectorDiv.style.display = "none";
-//     caseDiv.style.display = "flex";
-// }
-
-// /**
-//  * Gets the MIDI objects associated with the selected options in the port selects
-//  * @returns {Object} object containing input and output objects
-//  */
-// async function getInputAndOutput() {
-//     const { inputs, outputs } = await navigator.requestMIDIAccess({ sysex: true });
-
-//     const inputPort = document.querySelector(MIDI_INPUT_SELECTOR).value;
-//     const outputPort = document.querySelector(MIDI_OUTPUT_SELECTOR).value;
-
-//     const input = inputs.get(inputPort);
-//     const output = outputs.get(outputPort);
-
-//     return { input, output };
-// }
-
-// //--------------Defining callbacks for when a message is received--------------
-
-// /**
-//  * Check to see if the message was a loopback call, repeat it if it was
-//  * @param {Object} dataAndOutput
-//  * @param {Uint8Array} dataAndOutput.data
-//  * @param {Object} dataAndOutput.outputObj
-//  */
-// function handleLoopbackCall({ data, outputObj }) {
-//     if (data[0] === LOOPBACK_CALL[0] && data[1] === LOOPBACK_CALL[1]) {
-//         console.log("We got a loopback call");
-//         outputObj.send(LOOPBACK_CALL);
-//     }
-// }
-
-// function addModuleFunctionality(module, static, dynamic) {
-//     const label = module.querySelector(LABEL_SELECTOR);
-//     const knob = module.querySelector(KNOB_SELECTOR);
-
-//     knob.oninput = function () {
-//         const knobValue = knob.value;
-//         const dynamicValue = dynamic[0];
-//         const formattedText = static.replaceAll(STRING_FORMAT_IDENTIFIER, dynamicValue);
-//         label.innerText = formattedText;
-//     }
-// }
-
-// /**
-//  * applies SYSEX payload to controller
-//  * @param {Uint8Array} payload 
-//  */
-// function applyPatch(payload) {
-//     const message = String.fromCharCode(...payload);
-//     const { address, static, dynamic } = JSON.parse(message);
-//     const module = document.querySelectorAll(MODULE_SELECTOR)[address];
-
-//     addModuleFunctionality(module, static, dynamic);
-// }
-
-// /**
-//  * Check to see if the message was a patch info message, use it if it was
-//  * @param {Object} dataAndOutput
-//  * @param {Uint8Array} dataAndOutput.data
-//  * @param {Object} dataAndOutput.outputObj
-//  */
-// function handlePatchInfo({ data }) {
-//     if (data[0] === 0xF0 && data[1] === DEVICE_ID) {
-//         console.log("We got a patch definition");
-//         applyPatch(data.slice(2, -1));
-//     }
-// }
-
-// /**
-//  * Builds a callback for when a MIDI message is received
-//  * @param {Object} outputObj
-//  * @returns callback
-//  */
-// function makeOnMidiCallbackFromOutput(outputObj) {
-//     const handlerFunctions = [handleLoopbackCall, handlePatchInfo];
-
-//     return function ({ data }) {
-//         handlerFunctions.forEach(handlerFunction =>
-//             handlerFunction({ outputObj, data })
-//         );
-//     };
-// }
-
-// /**
-//  * Transforms the page and starts MIDI functionality
-//  */
-// async function startMidi() {
-//     hideConnectorAndShowCase();
-
-//     const { input, output } = await getInputAndOutput();
-//     input.onmidimessage = makeOnMidiCallbackFromOutput(output);
-
-//     output.send(LOOPBACK_CALL_REQUEST);
-//     console.log("Loopback request sent");
-// }
-
-
-// //-----------------------------------------------------------------------------------------------------------------------------//
-// //  Sets up event listeners for DOM elements
-// //-----------------------------------------------------------------------------------------------------------------------------//
-
-// window.addEventListener("load", buildController);
-// window.addEventListener("load", putPortsInSelects);
-// document.querySelector(APPLY_SELECTOR).addEventListener("click", startMidi);
+//-------------------------------- START IT UP --------------------------------
+window.addEventListener('load', main);

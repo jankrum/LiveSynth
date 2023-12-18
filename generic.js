@@ -27,13 +27,13 @@ const STOP_CC = 119;
  * If the user makes a choice, but the transformer function returns undefined,
  * it recurs without that choice as a choice, for it was bad.
  * @param {string} label 
- * @param {*[]} choices 
+ * @param {Object[]} choices 
  * @param {function} transformer 
  * @returns 
  */
 function selectFromList(label, choices, transformer = x => x) {
     if (choices.length === 0) {
-        throw new Error('outOfChoices');
+        throw new Error('No choices');
     }
 
     const promptText = [label, ...choices.map((choice, index) => `[${index + 1}] ${choice}`)].join('\n');
@@ -80,6 +80,22 @@ function selectFromList(label, choices, transformer = x => x) {
     return result;
 }
 
+function getPortByName(midiMap, portName) {
+    const midiArray = Array.from(midiMap);
+
+    const foundPort = midiArray.find(([_, { name }]) => name === portName);
+
+    if (foundPort) {
+        const key = foundPort[0];
+        try {
+            const port = midiMap.get(key);
+            return port;
+        } catch {
+            // Well we looked and we couldn't find it. Pack it up boys.
+        }
+    }
+}
+
 /**
  * For a given relationship, checks to see if there is a value in local storage
  *   If there is, we pull the value and try to connect to it
@@ -98,22 +114,9 @@ function getPort(midiAccess, relationship, direction) {
     const midiMap = midiAccess[`${direction}`];
     const midiArray = Array.from(midiMap);
 
-    function getPortByName(portName) {
-        for (const [key, { name }] of midiMap) {
-            if (name === portName) {
-                try {
-                    const port = midiMap.get(key);
-                    return port;
-                } catch {
-                    return;
-                }
-            }
-        }
-    }
-
     if (storedPortName) {  // If there is a value
         console.debug(`%cFound a value (${storedPortName}) for the '${relationship}' relationship!`, 'color: lightgreen');
-        const port = getPortByName(storedPortName);
+        const port = getPortByName(midiMap, storedPortName);
 
         if (port) {
             console.debug('%cAnd it was good!', 'background-color: green;');
@@ -132,7 +135,7 @@ function getPort(midiAccess, relationship, direction) {
     function testPort(chosenPortName) {
         try {
             console.debug(`Trying ${chosenPortName}`);
-            const port = getPortByName(chosenPortName);
+            const port = getPortByName(midiMap, chosenPortName);
             console.debug(port);
             if (port) {
                 console.debug('Its real, TRYING TO STORE IT');
@@ -200,7 +203,7 @@ function isSysexMessage(data) {
  * @returns {Boolean} isCommandCall
  */
 function isCommandCall(data) {
-    return data[0] === CC_HEADER && data[2] === FULL;
+    return data[0] === CC_HEADER;
 }
 
 //-------- FUNCTIONS FOR TRANSMITTING AND RECEIVING DATA OVER MIDI --------
@@ -214,8 +217,8 @@ function isCommandCall(data) {
 function makeJSONSysexMessage(objectToSend) {
     const text = JSON.stringify(objectToSend);
     const charArray = text.split('');
-    const bytesArray = charArray.map(char => char.charCodeAt(0));
-    const sysexMessage = [SYSEX_HEADER, DEVICE_ID, ...bytesArray, SYSEX_TERMINATOR];
+    const byteArray = charArray.map(char => char.charCodeAt(0));
+    const sysexMessage = [SYSEX_HEADER, DEVICE_ID, ...byteArray, SYSEX_TERMINATOR];
     return sysexMessage;
 }
 
@@ -226,8 +229,8 @@ function makeJSONSysexMessage(objectToSend) {
  * @returns {Object} objectFromMessage - An object to get from the JSON in the message
  */
 function getObjectFromJSONSysex(sysexMessage) {
-    const bytesArray = sysexMessage.slice(2, -1);
-    const text = String.fromCharCode.apply(null, bytesArray);
+    const byteArray = sysexMessage.slice(2, -1);
+    const text = String.fromCharCode(...byteArray);
     const objectFromMessage = JSON.parse(text);
     return objectFromMessage;
 }
@@ -240,11 +243,9 @@ function getObjectFromJSONSysex(sysexMessage) {
  * @returns {CallableFunction} onMIDIMessageCallback
  */
 function createCallbackFromHandlerFunctions(handlerFunctions) {
-    return ({ data }) => {
-        handlerFunctions.some(handlerFunction =>
-            handlerFunction(data)
-        );
-    };
+    return ({ data }) => handlerFunctions.some(
+        handlerFunction => handlerFunction(data)
+    );
 }
 
 console.debug('Imported Generic!');

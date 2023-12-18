@@ -9,37 +9,8 @@ const NEXT_BUTTON_SEL = '#nextBtn';
 const STOP_BUTTON_SEL = '#stopBtn';
 const DISPLAY_TEXT_SEL = '#displayText';
 
-//---------------------------- SHORTHAND FUNCTIONS ----------------------------
-/**
- * Makes it easier to query select
- * @param {String} selector
- * @returns {object} element
- */
-function getHTML(selector) {
-    return document.querySelector(selector);
-}
-
-/**
- * Makes it easier to query select all
- * @param {String} selector
- * @returns {object} element
- */
-function getAllHTML(selector) {
-    return document.querySelectorAll(selector);
-}
-
 //------------------- DEALING WITH MIDI MESSAGES WE RECEIVE -------------------
-/**
- * Responds to loopback calls with a loopback call, for the handshake
- * @param {Int8Array} data
- */
-function dealWithLoopbackCalls(outputToSequencer, data) {
-    if (isLoopbackCall(data)) {
-        console.debug('Heard a loopback call');
-        outputToSequencer.send(LOOPBACK_CALL);
-        return true;
-    }
-}
+
 
 //-------------------------- SETTING UP THE TRANSPORT -------------------------
 /**
@@ -48,7 +19,7 @@ function dealWithLoopbackCalls(outputToSequencer, data) {
  * @returns
  */
 function updateTransport(transportState) {
-    const transportChildElements = getAllHTML(TRANSPORT_CHILD_SEL);
+    const transportChildElements = document.querySelectorAll(TRANSPORT_CHILD_SEL);
 
     function updateElement(transportElement) {
         const stateKey = transportElement.getAttribute('state-key');
@@ -65,7 +36,7 @@ function updateTransport(transportState) {
  * So you cannot send another message until we have received one back
  */
 function disableTransport() {
-    const transportButtons = getAllHTML(TRANSPORT_BUTTON_SEL);
+    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
 
     function removeOnMouseDown(button) {
         button.addOnMouseDown = null;
@@ -79,7 +50,7 @@ function disableTransport() {
  * @param {MIDIOutput} outputToSequencer
  */
 function enableTransport(outputToSequencer) {
-    const transportButtons = getAllHTML(TRANSPORT_BUTTON_SEL);
+    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
 
     function addOnMouseDown(button) {
         const commandChange = button.getAttribute('command-change');
@@ -93,32 +64,42 @@ function enableTransport(outputToSequencer) {
 }
 
 /**
- * Take the data from a sysex message then update and unlock the transport
- * @param {Int8Array} data
- */
-function dealWithSysex(outputToSequencer, data) {
-    if (isSysexMessage(data)) {
-        console.debug('Heard a sysex message');
-        const transportState = getObjectFromJSONSysex(data);
-        updateTransport(transportState);
-        enableTransport(outputToSequencer);
-        return true;
-    }
-}
-
-/**
  * Sets up responding to MIDI messages and starts the handshake
  * @param {MIDIInput} inputFromSequencer
  * @param {MIDIOutput} outputToSequencer
  * @param {MIDIOutput} outputToSynth
  */
-function setUpMIDI(inputFromTransport, outputToSequencer) {
-    const handlerFunctions = [
-        data => dealWithLoopbackCalls(outputToSequencer, data),
-        data => dealWithSysex(outputToSequencer, data)
-    ];
+function setUpMIDI(inputFromSequencer, outputToSequencer) {
+    /**
+    * Responds to loopback calls with a loopback call, for the handshake
+    * @param {Int8Array} data
+    */
+    function dealWithLoopbackCalls(data) {
+        if (isLoopbackCall(data)) {
+            console.debug('Heard a loopback call');
+            outputToSequencer.send(LOOPBACK_CALL);
+            return true;
+        }
+    }
 
-    inputFromTransport.onmidimessage = createCallbackFromHandlerFunctions(handlerFunctions);
+    /**
+    * Take the data from a sysex message then update and unlock the transport
+    * @param {Int8Array} data
+    */
+    function dealWithSysex(data) {
+        if (isSysexMessage(data)) {
+            console.debug('Heard a sysex message');
+            const transportState = getObjectFromJSONSysex(data);
+            updateTransport(transportState);
+            enableTransport(outputToSequencer);
+            return true;
+        }
+    }
+
+    inputFromSequencer.onmidimessage = createCallbackFromHandlerFunctions([
+        dealWithLoopbackCalls,
+        dealWithSysex
+    ]);
 
     outputToSequencer.send(LOOPBACK_REQUEST);
 
@@ -131,7 +112,7 @@ function setUpMIDI(inputFromTransport, outputToSequencer) {
  * @param {MIDIOutput} outputToSequencer
  */
 function setUpButtons(outputToSequencer) {
-    const transportButtons = getAllHTML(TRANSPORT_BUTTON_SEL);
+    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
 
     function addOnMouseUp(button) {
         const commandChange = button.getAttribute('command-change');
@@ -145,8 +126,8 @@ function setUpButtons(outputToSequencer) {
  * Shows the transport
  */
 function showTransport() {
-    const transport = getHTML(TRANSPORT_DIV_SEL);
-    transport.style.display = 'block';
+    const transportDiv = document.querySelector(TRANSPORT_DIV_SEL);
+    transportDiv.style.display = 'block';
 }
 
 

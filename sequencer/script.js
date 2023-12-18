@@ -1,133 +1,171 @@
 //------------------------ MUTABLE STATE FOR SEQUENCER ------------------------
-let playing = false;
-let paused = false;
-let index = 0;
+// let playing = false;
+// let paused = false;
+// let index = 0;
 
-const timeouts = [];
-const currentNotes = [];
+// const timeouts = [];
+// const currentNotes = [];
 
-const songs = [
-    { title: 'Twinkle Twinkle Little Star' },
-    { title: 'Trouble' },
-    { title: 'Poses' }
-]
+// /**
+//  * Gets the current state of transport and make a JSON sysex message from it
+//  * @returns {Object} transportState
+//  */
+// function getTransporterState() {
+//     const transporterState = {
+//         cannotPrevious: index === 0,
+//         cannotPlay: playing,
+//         cannotPause: !playing,
+//         cannotNext: index === (songs.length - 1),
+//         cannotStop: !playing && !paused,
+//         songTitle: songs[index].title
+//     }
+//     return transporterState;
+// }
 
-// //------------------- DEALING WITH MIDI MESSAGES WE RECEIVE -------------------
+// /**
+//  * Sends the current state of the transport as a sysex message
+//  * @param {MIDIOutput} outputToTransporter
+//  */
+// function sendTransporterState(outputToTransporter) {
+//     const transporterState = getTransporterState();
+//     const sysexMessage = makeJSONSysexMessage(transporterState);
+//     outputToTransporter.send(sysexMessage);
+// }
+
+// /**
+//  * If a MIDI message is a command change, use it to update the transport
+//  * @param {MIDIOutput} outputToTransporter
+//  * @param {MIDIOutput} outputToTransporter
+//  * @param {Int8Array} data
+//  */
+// function dealWithTransporterCommandChanges(outputToTransporter, outputToSynthesizer, data) {
+//     if (isCommandCall(data)) {
+//         console.debug('Heard a command change');
+//         switch (data[1]) {
+//             case PREVIOUS_CC:
+//                 playing = false;
+//                 paused = false;
+//                 index -= 1;
+//                 console.debug('Went to the previous song');
+//                 break;
+//             case PLAY_CC:
+//                 playing = true;
+//                 paused = false;
+//                 console.debug('Started playing');
+//                 break;
+//             case PAUSE_CC:
+//                 playing = false;
+//                 paused = true;
+//                 console.debug('Paused');
+//                 break;
+//             case NEXT_CC:
+//                 playing = false;
+//                 paused = false;
+//                 index += 1;
+//                 console.debug('Went to the next song');
+//                 break;
+//             case STOP_CC:
+//                 playing = false;
+//                 paused = false;
+//                 console.debug('Stopped');
+//                 break;
+//             default:
+//                 return;
+//         }
+
+//         sendTransporterState(outputToTransporter);
+//         return true;
+//     }
+// }
+
 /**
- * If a MIDI message is a loopback request, send a loopback call back
- * @param {MIDIOutput} outputToTransport
- * @param {Int8Array} data
+ * Sets up responding to MIDI messages and starts the handshake
+ * @param {MIDIInput} inputFromTransporter
+ * @param {MIDIOutput} outputToTransporter
  */
-function dealWithLoopbackRequests(outputToTransport, data) {
-    if (isLoopbackRequest(data)) {
-        console.debug('Heard a loopback request');
-        outputToTransport.send(LOOPBACK_CALL);
-        return true;
-    }
-}
-
-/**
- * Gets the current state of transport and make a JSON sysex message from it
- * @returns {Object} transportState
- */
-function getTransportState() {
-    const transportState = {
-        cannotPrevious: index === 0,
-        cannotPlay: playing,
-        cannotPause: !playing,
-        cannotNext: index === (songs.length - 1),
-        cannotStop: !playing && !paused,
-        songTitle: songs[index].title
-    }
-    return transportState;
-}
-
-/**
- * Sends the current state of the transport as a sysex message
- * @param {MIDIOutput} outputToTransport
- */
-function sendTransportState(outputToTransport) {
-    const transportState = getTransportState();
-    const sysexMessage = makeJSONSysexMessage(transportState);
-    outputToTransport.send(sysexMessage);
-}
-
-/**
- * If a MIDI message is a loopback call, send the transport state
- * @param {MIDIOutput} outputToTransport
- * @param {Int8Array} data
- */
-function dealWithLoopbackCalls(outputToTransport, data) {
-    if (isLoopbackCall(data)) {
-        console.debug('Heard a loopback call');
-        sendTransportState(outputToTransport);
-        return true;
-    }
-}
-
-/**
- * If a MIDI message is a command change, use it to update the transport
- * @param {MIDIOutput} outputToTransport
- * @param {Int8Array} data
- */
-function dealWithCommandChanges(outputToTransport, outputToSynth, data) {
-    if (isCommandCall(data)) {
-        console.debug('Heard a command change');
-        switch (data[1]) {
-            case PREVIOUS_CC:
-                playing = false;
-                paused = false;
-                index -= 1;
-                console.debug('Went to the previous song');
-                break;
-            case PLAY_CC:
-                playing = true;
-                paused = false;
-                console.debug('Started playing');
-                break;
-            case PAUSE_CC:
-                playing = false;
-                paused = true;
-                console.debug('Paused');
-                break;
-            case NEXT_CC:
-                playing = false;
-                paused = false;
-                index += 1;
-                console.debug('Went to the next song');
-                break;
-            case STOP_CC:
-                playing = false;
-                paused = false;
-                console.debug('Stopped')
-                break;
-            default:
-                return;
+function setUpTransporter(inputFromTransporter, outputToTransporter) {
+    function dealWithLoopbackRequests(data) {
+        if (isLoopbackRequest(data)) {
+            console.debug('Heard a loopback request from the transporter');
+            output.send(LOOPBACK_CALL);
+            return true;
         }
-
-        sendTransportState(outputToTransport);
-        return true;
     }
+
+    function dealWithLoopbackCalls(data) {
+        if (isLoopbackCall(data)) {
+            console.debug('Heard a loopback call from the transporter');
+            // This is where I would dump transporter state
+            return true;
+        }
+    }
+
+    function dealWithCommandChanges(data) {
+        if (isCommandCall(data)) {
+            console.debug('Command Change Data (transporter):');
+            console.debug(data);
+            // This is where I would implement transport controls
+            return true;
+        }
+    }
+
+    inputFromTransporter.onmidimessage = createCallbackFromHandlerFunctions([
+        dealWithLoopbackRequests,
+        dealWithLoopbackCalls,
+        dealWithCommandChanges
+    ]);
+
+    outputToTransporter.send(LOOPBACK_CALL);
+
+    console.debug('Dealing with the transporter has been set up');
+}
+
+function makeControllerState() {
+    const controllerStates = Array(12).fill().map((_, index) => ({ index, labelArray: Array(128).fill().map((__, value) => `Controller: ${index}\nValue: ${value}`) }));
+    return controllerStates;
 }
 
 /**
  * Sets up responding to MIDI messages and starts the handshake
- * @param {MIDIInput} inputFromSequencer
- * @param {MIDIOutput} outputToSequencer
- * @param {MIDIOutput} outputToSynth
+ * @param {MIDIInput} inputFromController
+ * @param {MIDIOutput} outputToController
  */
-function setUpMIDI(inputFromTransport, outputToTransport, outputToSynth) {
-    const handlerFunctions = [
-        data => dealWithLoopbackRequests(outputToTransport, data),
-        data => dealWithLoopbackCalls(outputToTransport, data),
-        data => dealWithCommandChanges(outputToTransport, outputToSynth, data)
-    ];
+function setUpController(inputFromController, outputToController) {
+    function dealWithLoopbackRequests(data) {
+        if (isLoopbackRequest(data)) {
+            console.debug('Heard a loopback request from the controller');
+            outputToController.send(LOOPBACK_CALL);
+            return true;
+        }
+    }
 
-    inputFromTransport.onmidimessage = createCallbackFromHandlerFunctions(handlerFunctions);
+    function dealWithLoopbackCalls(data) {
+        if (isLoopbackCall(data)) {
+            console.debug('Heard a loopback call from the controller');
+            const controllerState = makeControllerState();
+            const controllerStateSysex = makeJSONSysexMessage({ controllerState });
+            outputToController.send(controllerStateSysex);
+            return true;
+        }
+    }
 
-    outputToTransport.send(LOOPBACK_CALL);
+    function dealWithCommandChanges(data) {
+        if (isCommandCall(data)) {
+            console.debug('Command Change Data (controller):');
+            console.debug(data);
+            return true;
+        }
+    }
 
-    console.debug('MIDI has been set up');
+    inputFromController.onmidimessage = createCallbackFromHandlerFunctions([
+        dealWithLoopbackRequests,
+        dealWithLoopbackCalls,
+        dealWithCommandChanges
+    ]);
+
+    outputToController.send(LOOPBACK_CALL);
+
+    console.debug('Dealing with the controller has been set up');
 }
 
 //------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
@@ -136,15 +174,26 @@ function setUpMIDI(inputFromTransport, outputToTransport, outputToSynth) {
  */
 async function main() {
     const PORTS = [
-        { relationship: 'TransportToSequencer', direction: 'inputs' },
-        { relationship: 'SequencerToTransport', direction: 'outputs' },
-        { relationship: 'SequencerToSynth', direction: 'outputs' }
+        // { relationship: 'TransporterToSequencer', direction: 'inputs' },
+        { relationship: 'ControllerToSequencer', direction: 'inputs' },
+        // { relationship: 'SynthesizerToSequencer', direction: 'outputs' },
+        // { relationship: 'SequencerToTransporter', direction: 'outputs' },
+        { relationship: 'SequencerToController', direction: 'outputs' }
+        // { relationship: 'SequencerToSynthesizer', direction: 'outputs' }
     ];
 
     try {
-        const [inputFromTransport, outputToTransport, outputToSynth] =
-            await getDesiredPorts(PORTS);
-        setUpMIDI(inputFromTransport, outputToTransport, outputToSynth);
+        const [
+            // inputFromTransporter,
+            inputFromController,
+            // inputFromSynthesizer,
+            // outputToTransporter,
+            outputToController
+            // outputToSynthesizer
+        ] = await getDesiredPorts(PORTS);
+        // setUpTransporter(inputFromTransporter, outputToTransporter);
+        setUpController(inputFromController, outputToController);
+        console.log('%cAll set up!', 'background-color: green;');
     } catch (error) {
         alert(error.message);
         console.error(error);
