@@ -23,6 +23,9 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
         }
     }
 
+    // Closure to speed up applyState function
+    const controllerModules = document.querySelectorAll(MODULE_SELECTOR);
+
     /**
      * Given a new label for the controller, display it
      * @param {Object} param0 - destructured into index and labelArray
@@ -30,18 +33,23 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
     function applyState({ index, labelArray }) {
         // For newlines
         const labelsForBrowser = labelArray.map(x => x.replace('\n', '<br>'));
-        const controllerModules = document.querySelectorAll(MODULE_SELECTOR);
+        // The module we are going to apply state to
         const moduleDiv = controllerModules[index];
+        // The input we want to value of
         const knobInput = moduleDiv.querySelector(KNOB_SELECTOR);
+        // The label we want to change the content of
         const labelHeader = moduleDiv.querySelector(LABEL_SELECTOR);
+        // The command change we will send after applying state
         const commandChange = knobInput.getAttribute('command-change');
 
+        // Update label with new label
         knobInput.oninput = () => {
             labelHeader.innerHTML = labelsForBrowser[knobInput.value];
         };
 
         labelHeader.innerHTML = labelsForBrowser[knobInput.value];
 
+        // Dump state
         outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
     }
 
@@ -54,8 +62,8 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
             console.debug('Heard a sysex message');
             console.log(data);
             try {
-                const sysexData = getObjectFromJSONSysex(data);
-                sysexData.controllerState.forEach(applyState);
+                const { controllerState } = getObjectFromJSONSysex(data);
+                controllerState.forEach(applyState);
             } catch (error) {
                 alert(error.message);
                 console.error(error);
@@ -70,11 +78,11 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
         dealWithSysex
     ]);
 
-    outputToSequencer.send(LOOPBACK_REQUEST);
-
     function setUpKnob(knobInput) {
+        // The command change to send the value under
         const commandChange = knobInput.getAttribute('command-change');
 
+        // When the knob is actually changed, send the value under its cc
         knobInput.onchange = () => {
             outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
         };
@@ -83,6 +91,10 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
     const knobInputs = document.querySelectorAll(KNOB_SELECTOR);
     knobInputs.forEach(setUpKnob);
 
+    // Start the LOOPBACK handshake
+    outputToSequencer.send(LOOPBACK_REQUEST);
+
+    // Display the case
     const caseDiv = document.querySelector(CASE_SELECTOR);
     caseDiv.style.display = 'block';
 

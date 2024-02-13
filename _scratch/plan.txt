@@ -1,0 +1,24 @@
+I wanna simplify the creation of connection to MIDI devices
+
+When we want to connect to a MIDI device, we can use the name of its relationship, ie: 'TransportToSequencer'
+
+When any MIDI device Object is created, we need to specify its input and output relationship names
+^This is the generic MIDI Device class which has:
+-Constructor ankrumMIDIDevice(String inputRelationshipName, String outputRelationshipName)
+    ^Async constructor that takes an input and output relationship name and a unit8 array to respond to a loopback call with. The constructor will go through all the old stuff of checking local storage and using the browser input. The constructor will also create instance properties for the object. Lastly, the constructor will initiate the handshake by sending a loopback call. The constructor will return a promise that resolves to the object when the device responds with a loopback.
+Instance property input
+    ^The MIDI input for the device
+Instance property handlerFunctions
+    ^A list of handler functions
+Instance property output
+    ^The MIDI output for the device
+Instance method remove()
+    ^Sends MIDI reset to output using 0xFF
+
+The transport and controller classes inherit from the generic but they add:
+A handler function for when loopback calls are made that parrot them
+Instance method onSYSEX(function)
+    ^When a SYSEX message is received
+And they make a loopback request when created
+
+

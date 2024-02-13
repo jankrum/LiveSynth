@@ -8,9 +8,11 @@ const PAUSE_BUTTON_SEL = '#pauseBtn';
 const NEXT_BUTTON_SEL = '#nextBtn';
 const STOP_BUTTON_SEL = '#stopBtn';
 const DISPLAY_TEXT_SEL = '#displayText';
+const TRANSPORT_STATE_ATTRIBUTE_SELECTOR = 'state-key';
+const TRANSPORT_ELEMENT_PROPERTY_SELECTOR = 'property';
 
-//------------------- DEALING WITH MIDI MESSAGES WE RECEIVE -------------------
-
+//-------------------------------- GLOBAL STATE -------------------------------
+let suppressPresses = true;
 
 //-------------------------- SETTING UP THE TRANSPORT -------------------------
 /**
@@ -19,48 +21,48 @@ const DISPLAY_TEXT_SEL = '#displayText';
  * @returns
  */
 function updateTransport(transportState) {
-    const transportChildElements = document.querySelectorAll(TRANSPORT_CHILD_SEL);
-
     function updateElement(transportElement) {
-        const stateKey = transportElement.getAttribute('state-key');
+        // An HTML attribute's value that says what we care about from the transport state object
+        const stateKey = transportElement.getAttribute(TRANSPORT_STATE_ATTRIBUTE_SELECTOR);
+        // The value from transport state SYSEX we are going to apply
         const stateValue = transportState[stateKey];
-        const property = transportElement.getAttribute('property');
-
+        // The property we are going to apply the value from state to
+        const property = transportElement.getAttribute(TRANSPORT_ELEMENT_PROPERTY_SELECTOR);
+        // Assign the value from the state transfer to the element's property
         transportElement[property] = stateValue;
     }
 
+    const transportChildElements = document.querySelectorAll(TRANSPORT_CHILD_SEL);
     transportChildElements.forEach(updateElement);
-}
-
-/**
- * So you cannot send another message until we have received one back
- */
-function disableTransport() {
-    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
-
-    function removeOnMouseDown(button) {
-        button.addOnMouseDown = null;
-    }
-
-    transportButtons.forEach(removeOnMouseDown);
 }
 
 /**
  * Makes buttons send messages when pressed, then makes them wait until response
  * @param {MIDIOutput} outputToSequencer
  */
-function enableTransport(outputToSequencer) {
-    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
-
+function setUpTransport(outputToSequencer) {
     function addOnMouseDown(button) {
+        // The command change that should be sent for our button
         const commandChange = button.getAttribute('command-change');
+
         button.onmousedown = () => {
-            outputToSequencer.send([CC_HEADER, commandChange, FULL]);
-            disableTransport();
+            if (!suppressPresses) {
+                outputToSequencer.send([CC_HEADER, commandChange, FULL]);
+                // Don't accept any more presses until we get a response
+                suppressPresses = true;
+            }
+        }
+
+        button.onmouseup = () => {
+            outputToSequencer.send([CC_HEADER, commandChange, 0]);
         }
     }
 
+    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
     transportButtons.forEach(addOnMouseDown);
+
+    // Start accepting presses
+    suppressPresses = false;
 }
 
 /**
@@ -91,7 +93,8 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
             console.debug('Heard a sysex message');
             const transportState = getObjectFromJSONSysex(data);
             updateTransport(transportState);
-            enableTransport(outputToSequencer);
+            // Start accepting presses again
+            suppressPresses = false;
             return true;
         }
     }
@@ -108,21 +111,6 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
 
 //------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
 /**
- * So each button will have its trivial mouseup callback
- * @param {MIDIOutput} outputToSequencer
- */
-function setUpButtons(outputToSequencer) {
-    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
-
-    function addOnMouseUp(button) {
-        const commandChange = button.getAttribute('command-change');
-        button.onmouseup = () => { outputToSequencer.send([CC_HEADER, commandChange, 0]); }
-    }
-
-    transportButtons.forEach(addOnMouseUp);
-}
-
-/**
  * Shows the transport
  */
 function showTransport() {
@@ -136,15 +124,14 @@ function showTransport() {
  */
 async function main() {
     const PORTS = [
-        { relationship: 'SequencerToTransport', direction: 'inputs' },
-        { relationship: 'TransportToSequencer', direction: 'outputs' }
+        { relationship: 'SequencerToTransporter', direction: 'inputs' },
+        { relationship: 'TransporterToSequencer', direction: 'outputs' }
     ];
 
     try {
         const [inputFromSequencer, outputToSequencer] =
             await getDesiredPorts(PORTS);
         setUpMIDI(inputFromSequencer, outputToSequencer);
-        setUpButtons(outputToSequencer);
         showTransport();
     } catch (error) {
         alert(error.message);

@@ -78,59 +78,59 @@
 //     }
 // }
 
-/**
- * Sets up responding to MIDI messages and starts the handshake
- * @param {MIDIInput} inputFromTransporter
- * @param {MIDIOutput} outputToTransporter
- */
-function setUpTransporter(inputFromTransporter, outputToTransporter) {
-    function dealWithLoopbackRequests(data) {
-        if (isLoopbackRequest(data)) {
-            console.debug('Heard a loopback request from the transporter');
-            output.send(LOOPBACK_CALL);
-            return true;
-        }
-    }
+// /**
+//  * Sets up responding to MIDI messages and starts the handshake
+//  * @param {MIDIInput} inputFromTransporter
+//  * @param {MIDIOutput} outputToTransporter
+//  */
+// function setUpTransporter(inputFromTransporter, outputToTransporter) {
+//     function dealWithLoopbackRequests(data) {
+//         if (isLoopbackRequest(data)) {
+//             console.debug('Heard a loopback request from the transporter');
+//             output.send(LOOPBACK_CALL);
+//             return true;
+//         }
+//     }
 
-    function dealWithLoopbackCalls(data) {
-        if (isLoopbackCall(data)) {
-            console.debug('Heard a loopback call from the transporter');
-            // This is where I would dump transporter state
-            return true;
-        }
-    }
+//     function dealWithLoopbackCalls(data) {
+//         if (isLoopbackCall(data)) {
+//             console.debug('Heard a loopback call from the transporter');
+//             // This is where I would dump transporter state
+//             return true;
+//         }
+//     }
 
-    function dealWithCommandChanges(data) {
-        if (isCommandCall(data)) {
-            console.debug('Command Change Data (transporter):');
-            console.debug(data);
-            // This is where I would implement transport controls
-            return true;
-        }
-    }
+//     function dealWithCommandChanges(data) {
+//         if (isCommandCall(data)) {
+//             console.debug('Command Change Data (transporter):');
+//             console.debug(data);
+//             // This is where I would implement transport controls
+//             return true;
+//         }
+//     }
 
-    inputFromTransporter.onmidimessage = createCallbackFromHandlerFunctions([
-        dealWithLoopbackRequests,
-        dealWithLoopbackCalls,
-        dealWithCommandChanges
-    ]);
+//     inputFromTransporter.onmidimessage = createCallbackFromHandlerFunctions([
+//         dealWithLoopbackRequests,
+//         dealWithLoopbackCalls,
+//         dealWithCommandChanges
+//     ]);
 
-    outputToTransporter.send(LOOPBACK_CALL);
+//     outputToTransporter.send(LOOPBACK_CALL);
 
-    console.debug('Dealing with the transporter has been set up');
-}
+//     console.debug('Dealing with the transporter has been set up');
+// }
 
-function makeControllerState() {
-    const controllerStates = Array(12).fill().map((_, index) => ({ index, labelArray: Array(128).fill().map((__, value) => `Controller: ${index}\nValue: ${value}`) }));
-    return controllerStates;
-}
+// function makeControllerState() {
+//     const controllerStates = Array(12).fill().map((_, index) => ({ index, labelArray: Array(128).fill().map((__, value) => `Controller: ${index}\nValue: ${value}`) }));
+//     return controllerStates;
+// }
 
 /**
  * Sets up responding to MIDI messages and starts the handshake
  * @param {MIDIInput} inputFromController
  * @param {MIDIOutput} outputToController
  */
-function setUpController(inputFromController, outputToController) {
+function setUpMIDI(inputFromController, outputToController) {
     function dealWithLoopbackRequests(data) {
         if (isLoopbackRequest(data)) {
             console.debug('Heard a loopback request from the controller');
@@ -174,25 +174,16 @@ function setUpController(inputFromController, outputToController) {
  */
 async function main() {
     const PORTS = [
-        // { relationship: 'TransporterToSequencer', direction: 'inputs' },
-        { relationship: 'ControllerToSequencer', direction: 'inputs' },
-        // { relationship: 'SynthesizerToSequencer', direction: 'outputs' },
-        // { relationship: 'SequencerToTransporter', direction: 'outputs' },
-        { relationship: 'SequencerToController', direction: 'outputs' }
-        // { relationship: 'SequencerToSynthesizer', direction: 'outputs' }
+        { relationship: 'TransporterToSequencer', direction: 'inputs' },
+        { relationship: 'SequencerToTransporter', direction: 'outputs' }
     ];
 
     try {
         const [
-            // inputFromTransporter,
-            inputFromController,
-            // inputFromSynthesizer,
-            // outputToTransporter,
-            outputToController
-            // outputToSynthesizer
+            inputFromTransporter,
+            outputToTransporter
         ] = await getDesiredPorts(PORTS);
-        // setUpTransporter(inputFromTransporter, outputToTransporter);
-        setUpController(inputFromController, outputToController);
+        setUpMIDI(inputFromTransporter, outputToTransporter);
         console.log('%cAll set up!', 'background-color: green;');
     } catch (error) {
         alert(error.message);
