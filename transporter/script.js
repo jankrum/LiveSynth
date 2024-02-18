@@ -1,15 +1,17 @@
 //------------------------ SELECTORS FOR HTML ELEMENTS ------------------------
-const TRANSPORT_DIV_SEL = '#transportDiv';
-const TRANSPORT_CHILD_SEL = '#transportDiv>*';
-const TRANSPORT_BUTTON_SEL = '.transportButton';
-const PREVIOUS_BUTTON_SEL = '#prevBtn';
-const PLAY_BUTTON_SEL = '#playBtn';
-const PAUSE_BUTTON_SEL = '#pauseBtn';
-const NEXT_BUTTON_SEL = '#nextBtn';
-const STOP_BUTTON_SEL = '#stopBtn';
-const DISPLAY_TEXT_SEL = '#displayText';
-const TRANSPORT_STATE_ATTRIBUTE_SELECTOR = 'state-key';
-const TRANSPORT_ELEMENT_PROPERTY_SELECTOR = 'property';
+const SELECTORS = {
+    TRANSPORT_DIV: '#transportDiv',
+    TRANSPORT_CHILD: '#transportDiv>*',
+    TRANSPORT_BUTTON: '.transportButton',
+    PREVIOUS_BUTTON: '#prevBtn',
+    PLAY_BUTTON: '#playBtn',
+    PAUSE_BUTTON: '#pauseBtn',
+    NEXT_BUTTON: '#nextBtn',
+    STOP_BUTTON: '#stopBtn',
+    DISPLAY_TEXT: '#displayText',
+    TRANSPORT_STATE_ATTRIBUTE: 'state-key',
+    TRANSPORT_ELEMENT_PROPERTY: 'property'
+}
 
 //-------------------------------- GLOBAL STATE -------------------------------
 let suppressPresses = true;
@@ -23,16 +25,16 @@ let suppressPresses = true;
 function updateTransport(transportState) {
     function updateElement(transportElement) {
         // An HTML attribute's value that says what we care about from the transport state object
-        const stateKey = transportElement.getAttribute(TRANSPORT_STATE_ATTRIBUTE_SELECTOR);
+        const stateKey = transportElement.getAttribute(SELECTORS.TRANSPORT_STATE_ATTRIBUTE);
         // The value from transport state SYSEX we are going to apply
         const stateValue = transportState[stateKey];
         // The property we are going to apply the value from state to
-        const property = transportElement.getAttribute(TRANSPORT_ELEMENT_PROPERTY_SELECTOR);
+        const property = transportElement.getAttribute(SELECTORS.TRANSPORT_ELEMENT_PROPERTY);
         // Assign the value from the state transfer to the element's property
         transportElement[property] = stateValue;
     }
 
-    const transportChildElements = document.querySelectorAll(TRANSPORT_CHILD_SEL);
+    const transportChildElements = document.querySelectorAll(SELECTORS.TRANSPORT_CHILD);
     transportChildElements.forEach(updateElement);
 }
 
@@ -47,18 +49,18 @@ function setUpTransport(outputToSequencer) {
 
         button.onmousedown = () => {
             if (!suppressPresses) {
-                outputToSequencer.send([CC_HEADER, commandChange, FULL]);
+                outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, MIDI_CONSTANTS.FULL]);
                 // Don't accept any more presses until we get a response
                 suppressPresses = true;
             }
         }
 
         button.onmouseup = () => {
-            outputToSequencer.send([CC_HEADER, commandChange, 0]);
+            outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, 0]);
         }
     }
 
-    const transportButtons = document.querySelectorAll(TRANSPORT_BUTTON_SEL);
+    const transportButtons = document.querySelectorAll(SELECTORS.TRANSPORT_BUTTON);
     transportButtons.forEach(addOnMouseDown);
 
     // Start accepting presses
@@ -66,47 +68,15 @@ function setUpTransport(outputToSequencer) {
 }
 
 /**
- * Sets up responding to MIDI messages and starts the handshake
- * @param {MIDIInput} inputFromSequencer
- * @param {MIDIOutput} outputToSequencer
- * @param {MIDIOutput} outputToSynth
- */
-function setUpMIDI(inputFromSequencer, outputToSequencer) {
-    /**
-    * Responds to loopback calls with a loopback call, for the handshake
-    * @param {Int8Array} data
-    */
-    function dealWithLoopbackCalls(data) {
-        if (isLoopbackCall(data)) {
-            console.debug('Heard a loopback call');
-            outputToSequencer.send(LOOPBACK_CALL);
-            return true;
-        }
-    }
-
-    /**
-    * Take the data from a sysex message then update and unlock the transport
-    * @param {Int8Array} data
-    */
-    function dealWithSysex(data) {
-        if (isSysexMessage(data)) {
-            console.debug('Heard a sysex message');
-            const transportState = getObjectFromJSONSysex(data);
-            updateTransport(transportState);
-            // Start accepting presses again
-            suppressPresses = false;
-            return true;
-        }
-    }
-
-    inputFromSequencer.onmidimessage = createCallbackFromHandlerFunctions([
-        dealWithLoopbackCalls,
-        dealWithSysex
-    ]);
-
-    outputToSequencer.send(LOOPBACK_REQUEST);
-
-    console.debug('MIDI has been set up');
+* Take the data from a sysex message then update and unlock the transport
+* @param {Int8Array} data
+*/
+function dealWithSysex(data) {
+    console.debug('Heard a sysex message');
+    const transportState = UTILITIES.getObjectFromJsonSysex(data);
+    updateTransport(transportState);
+    // Start accepting presses again
+    suppressPresses = false;
 }
 
 //------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
@@ -114,30 +84,35 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
  * Shows the transport
  */
 function showTransport() {
-    const transportDiv = document.querySelector(TRANSPORT_DIV_SEL);
+    const transportDiv = document.querySelector(SELECTORS.TRANSPORT_DIV);
     transportDiv.style.display = 'block';
 }
 
+//------------------------------------------------------------------------------------------------------------------------
 
-/**
- * Gets the ports we want, then use them to set up responding to MIDI messages
- */
 async function main() {
-    const PORTS = [
-        { relationship: 'SequencerToTransporter', direction: 'inputs' },
-        { relationship: 'TransporterToSequencer', direction: 'outputs' }
-    ];
+    await MidiDevice.initialize();
 
-    try {
-        const [inputFromSequencer, outputToSequencer] =
-            await getDesiredPorts(PORTS);
-        setUpMIDI(inputFromSequencer, outputToSequencer);
-        showTransport();
-    } catch (error) {
-        alert(error.message);
-        console.log(error);
-    }
+    // Example usage
+    const sequencer = new MidiDevice(
+        "Sequencer to Transporter",
+        "Transporter to Sequencer",
+        MIDI_CONSTANTS.LOOPBACK_REQUEST
+    );
+
+
+    // Add handlers
+    sequencer.addHandler(MIDI_CONSTANTS.isLoopbackCall, MIDI_CONSTANTS.sendLoopbackCall);
+    sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
+
+    // At this point, you can call createConnection() to establish the MIDI connection
+    sequencer.createConnection();
+
+    setUpTransport(sequencer.outputToDevice);
+
+    showTransport();
+
+    console.log('Done!');
 }
 
-//-------------------------------- START IT UP --------------------------------
 window.addEventListener('load', main);
