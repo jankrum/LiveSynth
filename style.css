@@ -1,10 +1,20 @@
-/* body {
-    font-family: monospace;
-} */
+:root {
+    --dark: rgb(40, 40, 40);
+    --light: rgb(227, 227, 227);
+    --orange: rgb(200, 110, 0);
+}
 
-/* @media (prefers-color-scheme: dark) {
+body {
+    font-family: monospace;
+}
+
+@media (prefers-color-scheme: dark) {
     body {
-        background-color: black;
-        color: white;
+        background-color: var(--dark);
+        color: var(--light);
     }
-} */
+
+    a {
+        color: var(--orange);
+    }
+}

@@ -22,7 +22,8 @@ const MIDI_CONSTANTS = (() => {
     const isLoopbackRequest = data => data[0] === LOOPBACK_REQUEST[0] && data[1] === LOOPBACK_REQUEST[1];
     const isLoopbackCall = data => data[0] === LOOPBACK_CALL[0] && data[1] === LOOPBACK_CALL[1];
     const isSysexMessage = data => data[0] === SYSEX_HEADER && data[1] === DEVICE_ID;
-    const isCommandCall = data => data[0] === CC_HEADER && data[2] == FULL;
+    const isCommandCall = data => data[0] === CC_HEADER;
+    const isButtonPress = data => data[0] === CC_HEADER && data[2] === FULL;
     const sendLoopbackRequest = _ => LOOPBACK_REQUEST;
     const sendLoopbackCall = _ => LOOPBACK_CALL;
 
@@ -46,6 +47,7 @@ const MIDI_CONSTANTS = (() => {
         isLoopbackCall,
         isSysexMessage,
         isCommandCall,
+        isButtonPress,
         sendLoopbackRequest,
         sendLoopbackCall
     };

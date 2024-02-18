@@ -7,12 +7,12 @@ class MidiDevice {
     }
 
     constructor(inputName, outputName, handshakeInitiator) {
-        this.inputConnection = new MidiConnection(inputName);
+        this.inputConnection = new MidiConnection(inputName);  // Lets us procrastinate on getting what is meant
         this.outputConnection = new MidiConnection(outputName);
-        this.handshakeInitiator = handshakeInitiator;
+        this.handshakeInitiator = handshakeInitiator;  // The value to send when initiating handsake
         this.handlerFunctions = [];
-        this.inputFromDevice = null; // MIDI input object
-        this.outputToDevice = null; // MIDI output object
+        this.inputFromDevice = null; // MIDI input object that we don't have yet
+        this.outputToDevice = null; // MIDI output object that we don't have yet
     }
 
     // Handlers for when a message is recieved on the input
@@ -31,13 +31,16 @@ class MidiDevice {
 
     // Creates connection between device and interfaces
     createConnection() {
+        // Incase we need to reference these directly
         this.inputFromDevice = this.inputConnection.getConnectionFrom(MidiDevice.midiAccess.inputs);
         this.outputToDevice = this.outputConnection.getConnectionFrom(MidiDevice.midiAccess.outputs);
 
+        // Sets up handler functions as callback for when messages are recieved
         this.inputFromDevice.onmidimessage = ({ data }) => {
             this.handlerFunctions.some(handlerFunction => handlerFunction(data));
         };
 
+        // Initiates handshake
         this.outputToDevice.send(this.handshakeInitiator);
     }
 }

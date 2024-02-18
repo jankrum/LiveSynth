@@ -5,23 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transporter</title>
-    <!-- <link rel="stylesheet" href="../style.css"> -->
+    <link rel="stylesheet" href="../style.css">
 </head>
 
 <body>
     <h1>Transporter &lpar;<a href="../index.html">go back</a>&rpar;</h1>
     <hr>
 
-    <div id="transportDiv" style="display: none;">
-        <button id="prevBtn" class="transportButton" property="disabled" command-change="115" state-key="cannotPrevious"
-            disabled> &lt; </button>
-        <button id="playBtn" class="transportButton" property="disabled" command-change="116" state-key="cannotPlay"
+    <div id="transporterDiv" style="display: none;">
+        <button id="prevBtn" class="transporterButton" property="disabled" command-change="115"
+            state-key="cannotPrevious" disabled> &lt; </button>
+        <button id="playBtn" class="transporterButton" property="disabled" command-change="116" state-key="cannotPlay"
             disabled>Play</button>
-        <button id="pauseBtn" class="transportButton" property="disabled" command-change="117" state-key="cannotPause"
+        <button id="pauseBtn" class="transporterButton" property="disabled" command-change="117" state-key="cannotPause"
             disabled>Pause</button>
-        <button id="nextBtn" class="transportButton" property="disabled" command-change="118" state-key="cannotNext"
+        <button id="nextBtn" class="transporterButton" property="disabled" command-change="118" state-key="cannotNext"
             disabled>&gt;</button>
-        <button id="stopBtn" class="transportButton" property="disabled" command-change="119" state-key="cannotStop"
+        <button id="stopBtn" class="transporterButton" property="disabled" command-change="119" state-key="cannotStop"
             disabled>Stop</button>
 
         <div id="displayText" class="text-display" property="innerHTML" state-key="songTitle" disabled>

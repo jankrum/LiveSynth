@@ -52,8 +52,10 @@ class MidiConnection {
         // Extract all the names from all the ports in our MIDI map
         const allPortNames = midiArray.map(([_, { name }]) => name);
 
+        // Used to create closure for testPort, since testPort cannot use this.storageKey
         const storageKey = this.storageKey;
 
+        // Checks if we actually get a port under a name
         function testPort(chosenPortName) {
             try {
                 console.debug(`Trying ${chosenPortName}`);

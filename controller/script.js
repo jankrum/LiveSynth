@@ -1,46 +1,25 @@
-//------------------------ SELECTORS FOR HTML ELEMENTS ------------------------
-const CASE_SELECTOR = '.case';
-const MODULE_SELECTOR = '.module';
-const LABEL_SELECTOR = 'h3';
-const KNOB_SELECTOR = 'input';
+// Selectors for HTML elements
+const SELECTORS = {
+    CASE: '.case',
+    MODULE: '.module',
+    LABEL: 'h3',
+    KNOB: 'input'
+};
 
-//------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
-/**
- * Sets up responding to MIDI messages and starts the handshake
- * @param {MIDIInput} inputFromSequencer
- * @param {MIDIOutput} outputToSequencer
- */
-function setUpMIDI(inputFromSequencer, outputToSequencer) {
-    /**
-    * Responds to loopback calls with a loopback call, for the handshake
-    * @param {Int8Array} data
-    */
-    function dealWithLoopbackCalls(data) {
-        if (isLoopbackCall(data)) {
-            console.debug('Heard a loopback call');
-            outputToSequencer.send(LOOPBACK_CALL);
-            return true;
-        }
-    }
+// Make the controller use the information from the sequencer
+function updateController(controllerState) {
+    // Not what we iterate over, but a closure for the applyState func
+    const controllerModules = document.querySelectorAll(SELECTORS.MODULE);
 
-    // Closure to speed up applyState function
-    const controllerModules = document.querySelectorAll(MODULE_SELECTOR);
-
-    /**
-     * Given a new label for the controller, display it
-     * @param {Object} param0 - destructured into index and labelArray
-     */
     function applyState({ index, labelArray }) {
         // For newlines
         const labelsForBrowser = labelArray.map(x => x.replace('\n', '<br>'));
         // The module we are going to apply state to
         const moduleDiv = controllerModules[index];
         // The input we want to value of
-        const knobInput = moduleDiv.querySelector(KNOB_SELECTOR);
+        const knobInput = moduleDiv.querySelector(SELECTORS.KNOB);
         // The label we want to change the content of
-        const labelHeader = moduleDiv.querySelector(LABEL_SELECTOR);
-        // The command change we will send after applying state
-        const commandChange = knobInput.getAttribute('command-change');
+        const labelHeader = moduleDiv.querySelector(SELECTORS.LABEL);
 
         // Update label with new label
         knobInput.oninput = () => {
@@ -48,78 +27,70 @@ function setUpMIDI(inputFromSequencer, outputToSequencer) {
         };
 
         labelHeader.innerHTML = labelsForBrowser[knobInput.value];
-
-        // Dump state
-        outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
     }
 
-    /**
-    * Take the data from a sysex message then update and unlock the transport
-    * @param {Int8Array} data
-    */
-    function dealWithSysex(data) {
-        if (isSysexMessage(data)) {
-            console.debug('Heard a sysex message');
-            console.log(data);
-            try {
-                const { controllerState } = getObjectFromJSONSysex(data);
-                controllerState.forEach(applyState);
-            } catch (error) {
-                alert(error.message);
-                console.error(error);
-            }
-
-            return true;
-        }
-    }
-
-    inputFromSequencer.onmidimessage = createCallbackFromHandlerFunctions([
-        dealWithLoopbackCalls,
-        dealWithSysex
-    ]);
-
-    function setUpKnob(knobInput) {
-        // The command change to send the value under
-        const commandChange = knobInput.getAttribute('command-change');
-
-        // When the knob is actually changed, send the value under its cc
-        knobInput.onchange = () => {
-            outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
-        };
-    }
-
-    const knobInputs = document.querySelectorAll(KNOB_SELECTOR);
-    knobInputs.forEach(setUpKnob);
-
-    // Start the LOOPBACK handshake
-    outputToSequencer.send(LOOPBACK_REQUEST);
-
-    // Display the case
-    const caseDiv = document.querySelector(CASE_SELECTOR);
-    caseDiv.style.display = 'block';
-
-    console.debug('MIDI has been set up');
+    // For all the controller states in the arg, update the corresponding moudle
+    controllerState.forEach(applyState);
 }
 
-//------------------------ FOR WHEN THE PAGE IS LOADED ------------------------
-/**
- * Gets the ports we want, then use them to set up responding to MIDI messages
- */
-async function main() {
-    const PORTS = [
-        { relationship: 'SequencerToController', direction: 'inputs' },
-        { relationship: 'ControllerToSequencer', direction: 'outputs' }
-    ];
-
+// For a SYSEX message, get the changes we need to make, and make them
+function dealWithSysex(data) {
     try {
-        const [inputFromSequencer, outputToSequencer] =
-            await getDesiredPorts(PORTS);
-        setUpMIDI(inputFromSequencer, outputToSequencer);
+        const { controllerState } = UTILITIES.getObjectFromJsonSysex(data);
+        updateController(controllerState);
     } catch (error) {
         alert(error.message);
         console.error(error);
     }
 }
 
-//-------------------------------- START IT UP --------------------------------
+// Make the controller actually transmit MIDI messages
+function setUpController(outputToSequencer) {
+    // Make a given knob actually transmit cc messages
+    function setUpKnob(knobInput) {
+        // The command change to send the value under
+        const commandChange = knobInput.getAttribute('command-change');
+
+        // When the knob is actually changed, send the value under its cc
+        knobInput.onchange = () => {
+            outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, knobInput.value]);
+        };
+    }
+
+    // Iterate over the knobs
+    const knobInputs = document.querySelectorAll(SELECTORS.KNOB);
+    knobInputs.forEach(setUpKnob);
+}
+
+// Shows the controller
+function showController() {
+    const caseDiv = document.querySelector(SELECTORS.CASE);
+    caseDiv.style.display = 'block';
+}
+
+// For when the page is loaded
+async function main() {
+    await MidiDevice.initialize();
+
+    // The connection to the sequencer
+    const sequencer = new MidiDevice(
+        "Sequencer to Controller",
+        "Controller to Sequencer",
+        MIDI_CONSTANTS.LOOPBACK_REQUEST
+    );
+
+    // Handler functions
+    sequencer.addHandler(MIDI_CONSTANTS.isLoopbackCall, MIDI_CONSTANTS.sendLoopbackCall);
+    sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
+
+    // Establishes the MIDI connection
+    sequencer.createConnection();
+
+    // Can't do this without an initialized outputToDevice
+    setUpController(sequencer.outputToDevice);
+
+    // Display controller for interacting with
+    showController();
+}
+
 window.addEventListener('load', main);

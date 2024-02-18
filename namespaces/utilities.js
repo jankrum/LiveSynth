@@ -1,16 +1,21 @@
 const UTILITIES = (() => {
+    // Asks the user to choose from a list
     function selectFromList(label, choices, transformer) {
+        // If no choices
         if (choices.length === 0) {
             throw new Error('No choices');
         }
 
+        // Creates the text to be displayed in the prompt
         const promptText = [label, ...choices.map((choice, index) => `[${index + 1}] ${choice}`)].join('\n');
+
+        // Store users response
         const userInput = prompt(promptText);
 
         console.debug(`User said ${userInput}`);
 
+        // If the user clicked cancel
         if (userInput === null) {
-            // User clicked cancel
             console.debug('%cUSER CANCELLED', 'background-color: orange; color: black;');
             throw new Error('cancelled');
         }
@@ -18,30 +23,37 @@ const UTILITIES = (() => {
         // Gets the original label
         const baseLabel = label.split('\n').slice(-1)[0];
 
-        const index = userResponse = parseInt(userInput, 10);
+        // The 0-indexed choice the user made
+        const index = userResponse = parseInt(userInput, 10) - 1;
 
+        // If the user did not enter a number
         if (isNaN(index)) {
-            // If the user did not enter a number
             console.debug('%cWhich was not a number', 'background-color: orange;');
             const newLabel = `Please enter a number\n${baseLabel}`;
+            // Ask again with error message
             return selectFromList(newLabel, choices, transformer);
         }
 
-        if (index < 1 || index > choices.length) {
-            // If the user entered a number outside the legal range
+        // If the user entered a number outside the legal range
+        if (index < 0 || index > choices.length - 1) {
             console.debug('%cWhich was not in range', 'background-color: orange;');
             const newLabel = `Please enter a number in the range\n${baseLabel}`;
+            // Ask again with error message
             return selectFromList(newLabel, choices, transformer);
         }
 
-        const selectedItem = choices[index - 1];
+        // The obj the user chose
+        const selectedItem = choices[index];
+
+        // The transformed version of the obj
         const result = transformer(selectedItem);
 
+        // If the user choose something that we couldn't use
         if (result === undefined) {
-            // If the user choose something that we couldn't use
             console.debug('%cWhich was not valid', 'background-color: firebrick;');
             const newLabel = `Invalid choice\n${baseLabel}`;
-            const newChoices = choices.filter((_, iterIndex) => iterIndex !== index - 1);
+            // Remove it from the next set of choices
+            const newChoices = choices.filter((_, iterIndex) => iterIndex !== index);
             return selectFromList(newLabel, newChoices, transformer);
         }
 
