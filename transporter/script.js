@@ -82,14 +82,9 @@ async function main() {
     await MidiDevice.initialize();
 
     // The connection to the sequencer
-    const sequencer = new MidiDevice(
-        "Sequencer to Transporter",
-        "Transporter to Sequencer",
-        MIDI_CONSTANTS.LOOPBACK_REQUEST
-    );
+    const sequencer = new Sequencer('Transporter');
 
     // Handler functions
-    sequencer.addHandler(MIDI_CONSTANTS.isLoopbackCall, MIDI_CONSTANTS.sendLoopbackCall);
     sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
 
     // Establishes the MIDI connection

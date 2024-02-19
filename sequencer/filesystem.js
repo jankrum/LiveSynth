@@ -266,49 +266,49 @@ const fs = {
     'charts': [
         {
             'title': 'Hello World',
-            'body': '<? xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE score-partwise PUBLIC\r\n    \"-\/\/Recordare\/\/DTD MusicXML 4.0 Partwise\/\/EN\"\r\n    \"http:\/\/www.musicxml.org\/dtds\/partwise.dtd\"><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\"><part-name>Music<\/part-name><\/score-part><\/part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>1<\/divisions><key><fifths>0<\/fifths><\/key><time><beats>4<\/beats><beat-type>4<\/beat-type><\/time><clef><sign>G<\/sign><line>2<\/line><\/clef><\/attributes><note><pitch><step>C<\/step><octave>4<\/octave><\/pitch><duration>4<\/duration><type>whole<\/type><\/note><\/measure><\/part><\/score-partwise>'
-        },
-        {
-            'title': 'Twinkle Twinkle Little Star',
-            'body': '%musicXML_goes_here%'
-        },
-        {
-            'title': 'Mack the Knife',
-            'body': '%musicXML_goes_here%'
-        },
-        {
-            'title': 'On the Run',
-            'body': '%musicXML_goes_here%'
+            'body': '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE score-partwise PUBLIC\r\n    \"-\/\/Recordare\/\/DTD MusicXML 4.0 Partwise\/\/EN\"\r\n    \"http:\/\/www.musicxml.org\/dtds\/partwise.dtd\"><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\"><part-name>synth<\/part-name><player><player-name>dummy_player<\/player-name><\/player><\/score-part><\/part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>1<\/divisions><key><fifths>0<\/fifths><\/key><time><beats>4<\/beats><beat-type>4<\/beat-type><\/time><clef><sign>G<\/sign><line>2<\/line><\/clef><\/attributes><note><pitch><step>C<\/step><octave>4<\/octave><\/pitch><duration>4<\/duration><type>whole<\/type><\/note><\/measure><\/part><\/score-partwise>'
         }
+        // {
+        //     'title': 'Twinkle Twinkle Little Star',
+        //     'body': '%musicXML_goes_here%'
+        // },
+        // {
+        //     'title': 'Mack the Knife',
+        //     'body': '%musicXML_goes_here%'
+        // },
+        // {
+        //     'title': 'On the Run',
+        //     'body': '%musicXML_goes_here%'
+        // }
     ],
     'scripts': [
         {
             'name': 'dummy_player',
-            'script': '%player_script_goes_here%'
+            'script': '%dummy_player_script_goes_here%'
         },
         {
             'name': 'octave_jumper',
-            'script': '%player_script_goes_here%'
+            'script': '%octave_jumper_script_goes_here%'
         },
         {
             'name': 'jazz_bassist',
-            'script': '%player_script_goes_here%'
+            'script': '%jazz_bassist_script_goes_here%'
         },
         {
             'name': 'jazz_drummer',
-            'script': '%player_script_goes_here%'
+            'script': '%jazz_drummer_script_goes_here%'
         },
         {
             'name': 'jazz_keyboardist',
-            'script': '%player_script_goes_here%'
+            'script': '%jazz_keyboardist_script_goes_here%'
         },
         {
             'name': 'jazz_trumpeter',
-            'script': '%player_script_goes_here%'
+            'script': '%jazz_trumpeter_script_goes_here%'
         },
         {
             'name': 'eight_step_sequencer',
-            'script': '%player_script_goes_here%'
+            'script': '%eight_step_sequencer_script_goes_here%'
         }
     ]
 };

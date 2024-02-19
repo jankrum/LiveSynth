@@ -1,7 +1,8 @@
 :root {
     --dark: rgb(40, 40, 40);
     --light: rgb(227, 227, 227);
-    --orange: rgb(200, 110, 0);
+    --orange: rgb(255, 160, 0);
+    --grey: rgb(133, 133, 133);
 }
 
 body {
@@ -16,5 +17,29 @@ body {
 
     a {
         color: var(--orange);
+    }
+
+    button {
+        border-width: 1px;
+        border-style: solid;
+        border-color: var(--light);
+        background-color: var(--dark);
+        color: var(--light);
+    }
+
+    button:enabled:hover {
+        background-color: var(--light);
+        color: var(--dark);
+    }
+
+    button:enabled:active {
+        background-color: var(--orange);
+        color: var(--light);
+        /* filter: brightness(1.5); */
+    }
+
+    button:disabled {
+        border-color: var(--grey);
+        color: var(--grey);
     }
 }

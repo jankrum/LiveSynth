@@ -1,5 +1,6 @@
 // Selectors for HTML elements
 const SELECTORS = {
+    PART_NAME: '#part',
     CASE: '.case',
     MODULE: '.module',
     LABEL: 'h3',
@@ -72,15 +73,13 @@ function showController() {
 async function main() {
     await MidiDevice.initialize();
 
+    const partName = document.querySelector(SELECTORS.PART_NAME).innerText.toUpperCase();
+    const sourceName = partName + "Controller";
+
     // The connection to the sequencer
-    const sequencer = new MidiDevice(
-        "Sequencer to Controller",
-        "Controller to Sequencer",
-        MIDI_CONSTANTS.LOOPBACK_REQUEST
-    );
+    const sequencer = new Sequencer(sourceName);
 
     // Handler functions
-    sequencer.addHandler(MIDI_CONSTANTS.isLoopbackCall, MIDI_CONSTANTS.sendLoopbackCall);
     sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
 
     // Establishes the MIDI connection

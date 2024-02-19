@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmony Controller</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        /* @font-face {
+            font-family: 'lcd';
+            src: url(../Code_7x5.ttf) format('truetype');
+        } */
+
+        .label {
+            font-family: 'lcd', monospace;
+            font-size: 48;
+            font-smooth: never;
+            -webkit-font-smoothing: none;
+            font-variant-numeric: tabular-nums lining-nums;
+
+            width: 16ch;
+            height: 2lh;
+
+            border: 4px solid white;
+        }
+
+        input[type="range"] {
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1><span id="part">Harmony</span> Controller &lpar;<a href="../index.html">go back</a>&rpar;</h1>
+    <hr>
+
+    <div class="case" style="display: none">
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="108">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="109">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="110">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="111">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="112">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="113">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="114">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="115">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="116">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="117">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="118">
+        </div>
+        <hr>
+        <div class="module">
+            <h3 class="label">%EMPTY%</h3>
+            <input type="range" min="0" max="127" command-change="119">
+        </div>
+    </div>
+
+    <script src="../namespaces/utilities.js"></script>
+    <script src="../namespaces/midi_constants.js"></script>
+    <script src="../namespaces/midi_connection.js"></script>
+    <script src="../namespaces/midi_device.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -8,7 +8,7 @@ Controller
 # Overview
 ## Sequencer
 **Purpose**: Tells the synthesizer what notes to play. determines what notes to play by applying script to chart.
-**Tech Stack**: Raspberry Pi, Debian, C++, RTP-MIDI, MusicXML, Scheme interpreter, cJSON, (insert C midi library here)
+**Tech Stack**: Raspberry Pi, Debian, C++, RTP-MIDI, MusicXML, Scheme interpreter, cJSON, (insert C MIDI library here)
  ## Transporter
 **Purpose**: Provides master transport control for sequencer. 
 **Tech Stack**: Teensy 4.1, C++, Arduino USB MIDI, Arduino JSON
