@@ -4,7 +4,7 @@ const allStrings = {
     clearButtonSelector: '#clear_local_storage_button'
 }
 
-function clearLocalStorage() {
+async function clearLocalStorage() {
     if (confirm(allStrings.wantToClearPrompt)) {
         localStorage.clear();
         alert(allStrings.clearedMessage);
@@ -13,3 +13,5 @@ function clearLocalStorage() {
 
 const clearLocalStorageButton = document.querySelector(allStrings.clearButtonSelector);
 clearLocalStorageButton.addEventListener('mousedown', clearLocalStorage);
+
+main();
