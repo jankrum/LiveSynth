@@ -1,20 +1,63 @@
-function read(text) {
-    return text;
-}
+const MAL = (() => {
+    class Reader {
+        constructor(tokens) {
+            this.tokens = tokens;
+            this.position = 0;
+        }
 
-function eval(text) {
-    return text;
-}
+        peek() {
+            return this.tokens[this.position];
+        }
 
-function print(text) {
-    return text;
-}
+        next() {
+            const result = this.peek();
+            this.position += 1;
 
-function rep(text) {
-    const ast = read(text);
-    const result = eval(ast);
-    return print(result)
-}
+            return result;
+        }
+    }
+
+    function tokenize(text) {
+        return text.match(/[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g)
+    }
+
+    function readForm(reader) {
+        const firstToken = reader.peek();
+
+        switch (firstToken) {
+            case '(':
+                readList(reader)
+        }
+    }
+
+    function readStr(text) {
+        const tokens = tokenize(text);
+        const reader = new Reader(tokens);
+        readForm(reader);
+    }
+
+    function read(text) {
+        return text;
+    }
+
+    function eval(text) {
+        return text;
+    }
+
+    function print(text) {
+        return text;
+    }
+
+    function rep(text) {
+        const ast = read(text);
+        const result = eval(ast);
+        return print(result)
+    }
+
+    return {
+        rep
+    };
+})();
 
 function main() {
     let input;
@@ -26,6 +69,6 @@ function main() {
             break;
         }
 
-        alert(rep(input));
+        alert(MAL.rep(input));
     }
 }
