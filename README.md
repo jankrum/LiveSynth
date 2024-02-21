@@ -1,8 +1,8 @@
 # System Diagram
-Transporter
+Transporter\
 &emsp;&emsp;↕\
 Sequencer → Synthesizer\
-&emsp;&emsp;↕
+&emsp;&emsp;↕\
 Controller
 
 # Overview
