@@ -1,22 +1,22 @@
 # System Diagram
 Transporter
-&emsp;&emsp;↕
-Sequencer → Synthesizer
+&emsp;&emsp;↕\
+Sequencer → Synthesizer\
 &emsp;&emsp;↕
 Controller
 
 # Overview
 ## Sequencer
-**Purpose**: Tells the synthesizer what notes to play. determines what notes to play by applying script to chart.
+**Purpose**: Tells the synthesizer what notes to play. determines what notes to play by applying script to chart.\
 **Tech Stack**: Raspberry Pi, Debian, C++, RTP-MIDI, MusicXML, Scheme interpreter, cJSON, (insert C midi library here)
  ## Transporter
-**Purpose**: Provides master transport control for sequencer. 
+**Purpose**: Provides master transport control for sequencer.\
 **Tech Stack**: Teensy 4.1, C++, Arduino USB MIDI, Arduino JSON
  ## Controller
-**Purpose**: Exposes variables in sequencer for direct access by performer(s)
+**Purpose**: Exposes variables in sequencer for direct access by performer(s)\
 **Tech Stack**: Teensy 4.1, C++, Arduino Apple MIDI, Arduino JSON
 ## Synthesizer
-**Purpose**: Makes sound, is told what to play by the sequencer.
+**Purpose**: Makes sound, is told what to play by the sequencer.\
 **Tech Stack**: Teensy 4.1, C++, Arduino Apple MIDI, Arduino JSON
 
 # PROJECT TIMELINE
