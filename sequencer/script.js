@@ -70,6 +70,22 @@ async function loadChart() {
     console.log({ parts });
 }
 
+function startPlaying() {
+    // pass
+}
+
+function resumePlaying() {
+    // pass
+}
+
+function pausePlaying() {
+    // pass
+}
+
+function stopPlaying() {
+    // pass
+}
+
 // Calculates and returns a MIDI sysex message containing
 // a JSON obj representing the state for the transport
 function sendTransportState() {
@@ -89,6 +105,7 @@ function sendTransportState() {
 function dealWithTransporterButtonPresses(data) {
     switch (data[1]) {
         case MIDI_CONSTANTS.PREVIOUS_CC:
+            stopPlaying();
             // Checks to make sure we aren't on the first chart
             if (state.chartIndex > 0) {
                 state.playing = false;
@@ -98,14 +115,22 @@ function dealWithTransporterButtonPresses(data) {
             }
             break;
         case MIDI_CONSTANTS.PLAY_CC:
+            if (!state.paused) {
+                // If we weren't paused
+                startPlaying();
+            } else {
+                // If we were paused
+                resumePlaying();
+            }
             state.playing = true;
             state.paused = false;
-            break;
         case MIDI_CONSTANTS.PAUSE_CC:
+            pausePlaying();
             state.playing = false;
             state.paused = true;
             break;
         case MIDI_CONSTANTS.NEXT_CC:
+            stopPlaying();
             // Checks to make sure we aren't on the last chart
             if (state.chartIndex < state.charts.length - 1) {
                 state.playing = false;
@@ -115,6 +140,7 @@ function dealWithTransporterButtonPresses(data) {
             }
             break;
         case MIDI_CONSTANTS.STOP_CC:
+            stopPlaying();
             state.playing = false;
             state.paused = false;
             break;
