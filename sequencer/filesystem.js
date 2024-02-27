@@ -266,18 +266,18 @@ const fs = {
     'charts': [
         {
             'title': 'Hello World',
-            'body': '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE score-partwise PUBLIC\r\n    \"-\/\/Recordare\/\/DTD MusicXML 4.0 Partwise\/\/EN\"\r\n    \"http:\/\/www.musicxml.org\/dtds\/partwise.dtd\"><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\"><part-name>synth<\/part-name><player><player-name>dummy_player<\/player-name><\/player><\/score-part><\/part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>1<\/divisions><key><fifths>0<\/fifths><\/key><time><beats>4<\/beats><beat-type>4<\/beat-type><\/time><clef><sign>G<\/sign><line>2<\/line><\/clef><\/attributes><note><pitch><step>C<\/step><octave>4<\/octave><\/pitch><duration>4<\/duration><type>whole<\/type><\/note><\/measure><\/part><\/score-partwise>'
+            'body': '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE score-partwise PUBLIC\r\n    \"-\/\/Recordare\/\/DTD MusicXML 4.0 Partwise\/\/EN\"\r\n    \"http:\/\/www.musicxml.org\/dtds\/partwise.dtd\"><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\"><part-name>lead<\/part-name><player><player-name>dummy_player<\/player-name><\/player><\/score-part><\/part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>1<\/divisions><key><fifths>0<\/fifths><\/key><time><beats>4<\/beats><beat-type>4<\/beat-type><\/time><clef><sign>G<\/sign><line>2<\/line><\/clef><\/attributes><note><pitch><step>C<\/step><octave>4<\/octave><\/pitch><duration>4<\/duration><type>whole<\/type><\/note><\/measure><\/part><\/score-partwise>'
         }
         // {
         //     'title': 'Twinkle Twinkle Little Star',
         //     'body': '%musicXML_goes_here%'
         // },
         // {
-        //     'title': 'Mack the Knife',
+        //     'title': 'On the Run',
         //     'body': '%musicXML_goes_here%'
         // },
         // {
-        //     'title': 'On the Run',
+        //     'title': 'Fly Me to the Moon',
         //     'body': '%musicXML_goes_here%'
         // }
     ],

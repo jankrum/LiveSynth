@@ -21,4 +21,6 @@ Instance method onSYSEX(function)
     ^When a SYSEX message is received
 And they make a loopback request when created
 
-
+THINGS I WANT TO DO NEXT, GOING FORWARD:
+-Add remove instance method to device class
+-Make scripts just work on any level (starting with TTLS)

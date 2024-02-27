@@ -5,7 +5,7 @@
 <score-partwise version="4.0">
   <part-list>
     <score-part id="P1">
-      <part-name>synth</part-name>
+      <part-name>lead</part-name>
         <player>
           <player-name>dummy_player</player-name>
         </player>
