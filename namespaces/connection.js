@@ -1,4 +1,65 @@
-class MidiConnection {
+// Asks the user to choose from a list
+function selectFromList(label, choices, transformer) {
+    // If no choices
+    if (choices.length === 0) {
+        throw new Error('No choices');
+    }
+
+    // Creates the text to be displayed in the prompt
+    const promptText = [label, ...choices.map((choice, index) => `[${index + 1}] ${choice}`)].join('\n');
+
+    // Store users response
+    const userInput = prompt(promptText);
+
+    console.debug(`User said ${userInput}`);
+
+    // If the user clicked cancel
+    if (userInput === null || userInput === undefined) {
+        console.debug('%cUSER CANCELLED', 'background-color: orange; color: black;');
+        throw new Error('cancelled');
+    }
+
+    // Gets the original label
+    const baseLabel = label.split('\n').slice(-1)[0];
+
+    // The 0-indexed choice the user made
+    const index = parseInt(userInput, 10) - 1;
+
+    // If the user did not enter a number
+    if (isNaN(index)) {
+        console.debug('%cWhich was not a number', 'background-color: orange;');
+        const newLabel = `Please enter a number\n${baseLabel}`;
+        // Ask again with error message
+        return selectFromList(newLabel, choices, transformer);
+    }
+
+    // If the user entered a number outside the legal range
+    if (index < 0 || index > choices.length - 1) {
+        console.debug('%cWhich was not in range', 'background-color: orange;');
+        const newLabel = `Please enter a number in the range\n${baseLabel}`;
+        // Ask again with error message
+        return selectFromList(newLabel, choices, transformer);
+    }
+
+    // The obj the user chose
+    const selectedItem = choices[index];
+
+    // The transformed version of the obj
+    const result = transformer(selectedItem);
+
+    // If the user choose something that we couldn't use
+    if (result === undefined) {
+        console.debug('%cWhich was not valid', 'background-color: firebrick;');
+        const newLabel = `Invalid choice\n${baseLabel}`;
+        // Remove it from the next set of choices
+        const newChoices = choices.filter((_, iterIndex) => iterIndex !== index);
+        return selectFromList(newLabel, newChoices, transformer);
+    }
+
+    return result;
+}
+
+export default class Connection {
     constructor(name) {
         this.name = name;  // The name for a relationship between MIDI devices
         this.storageKey = `midiConnection_${name}`;  // The storage key we will use for localStorage
@@ -75,7 +136,7 @@ class MidiConnection {
         }
 
         // Ask the user to choose a port they want for this relationship
-        const userResponse = UTILITIES.selectFromList(label, allPortNames, testPort);
+        const userResponse = selectFromList(label, allPortNames, testPort);
 
         return userResponse;
     }

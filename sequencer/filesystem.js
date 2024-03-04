@@ -262,7 +262,7 @@
 //     return midiValue;
 // }
 
-const fs = {
+export default {
     'charts': [
         {
             'title': 'Hello World',

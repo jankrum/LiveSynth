@@ -1,3 +1,10 @@
+import Device from '/namespaces/device.js';
+import { isLoopbackCall, isCommandCall, PREVIOUS_CC, PLAY_CC, PAUSE_CC, NEXT_CC, STOP_CC, isButtonPress } from '/namespaces/constants.js';
+import Transporter from '/namespaces/transporter.js';
+import Controller from '/namespaces/controller.js';
+import Synthesizer from '/namespaces/synthesizer.js';
+import filesystem from './filesystem.js';
+
 // The mutable state for the sequencer
 const state = {
     playing: false,
@@ -16,7 +23,7 @@ function sendControllerState() {
         return result;
     })
 
-    return UTILITIES.makeJsonSysexMessage({ controllerState });
+    return Controller.makeJsonSysexMessage({ controllerState });
 }
 
 // Handles command calls from the controller
@@ -29,7 +36,7 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
     const partName = scorePart.querySelector('part-name').innerHTML.toUpperCase();
     const playerName = scorePart.querySelector('player-name').innerHTML;
 
-    const script = fs.scripts.find(scriptFile => scriptFile.name === playerName).script;
+    const script = filesystem.scripts.find(scriptFile => scriptFile.name === playerName).script;
 
     if (!script) {
         throw new Error('Could not find matching script');
@@ -38,8 +45,8 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
     // The connection to the controller
     const controller = new Controller(partName);
 
-    controller.addHandler(MIDI_CONSTANTS.isLoopbackCall, sendControllerState);
-    controller.addHandler(MIDI_CONSTANTS.isCommandCall, dealWithControllerCommandCalls);
+    controller.addHandler(isLoopbackCall, sendControllerState);
+    controller.addHandler(isCommandCall, dealWithControllerCommandCalls);
 
     await controller.createConnection();
 
@@ -53,7 +60,7 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
 }
 
 async function loadChart() {
-    const chartText = fs.charts[state.chartIndex].body;
+    const chartText = filesystem.charts[state.chartIndex].body;
 
     const parser = new DOMParser();
     const chart = parser.parseFromString(chartText, 'text/xml');
@@ -93,18 +100,18 @@ function sendTransportState() {
         cannotPrevious: state.chartIndex <= 0,
         cannotPlay: state.playing,
         cannotPause: !state.playing,
-        cannotNext: state.chartIndex >= (fs.charts.length - 1),
+        cannotNext: state.chartIndex >= (filesystem.charts.length - 1),
         cannotStop: !state.playing && !state.paused,
-        songTitle: fs.charts[state.chartIndex].title
+        songTitle: filesystem.charts[state.chartIndex].title
     };
 
-    return UTILITIES.makeJsonSysexMessage(stateToSend);
+    return Transporter.makeJsonSysexMessage(stateToSend);
 }
 
 // Deals with button presses
 function dealWithTransporterButtonPresses(data) {
     switch (data[1]) {
-        case MIDI_CONSTANTS.PREVIOUS_CC:
+        case PREVIOUS_CC:
             stopPlaying();
             // Checks to make sure we aren't on the first chart
             if (state.chartIndex > 0) {
@@ -114,7 +121,7 @@ function dealWithTransporterButtonPresses(data) {
                 loadChart();
             }
             break;
-        case MIDI_CONSTANTS.PLAY_CC:
+        case PLAY_CC:
             if (!state.paused) {
                 // If we weren't paused
                 startPlaying();
@@ -124,12 +131,12 @@ function dealWithTransporterButtonPresses(data) {
             }
             state.playing = true;
             state.paused = false;
-        case MIDI_CONSTANTS.PAUSE_CC:
+        case PAUSE_CC:
             pausePlaying();
             state.playing = false;
             state.paused = true;
             break;
-        case MIDI_CONSTANTS.NEXT_CC:
+        case NEXT_CC:
             stopPlaying();
             // Checks to make sure we aren't on the last chart
             if (state.chartIndex < state.charts.length - 1) {
@@ -139,7 +146,7 @@ function dealWithTransporterButtonPresses(data) {
                 loadChart();
             }
             break;
-        case MIDI_CONSTANTS.STOP_CC:
+        case STOP_CC:
             stopPlaying();
             state.playing = false;
             state.paused = false;
@@ -152,14 +159,14 @@ function dealWithTransporterButtonPresses(data) {
 
 // For when the page is loaded
 async function main() {
-    await MidiDevice.initialize();
+    await Device.initialize();
 
     // The connection to the transporter
     const transporter = new Transporter();
 
     // Handler functions
-    transporter.addHandler(MIDI_CONSTANTS.isLoopbackCall, sendTransportState);
-    transporter.addHandler(MIDI_CONSTANTS.isButtonPress, dealWithTransporterButtonPresses);
+    transporter.addHandler(isLoopbackCall, sendTransportState);
+    transporter.addHandler(isButtonPress, dealWithTransporterButtonPresses);
 
     // Establishes the MIDI connection
     transporter.createConnection();
