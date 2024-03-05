@@ -24,16 +24,7 @@ export default class Device {
 
     // Handlers for when a message is recieved on the input
     addHandler(predicate, response) {
-        this.handlerFunctions.push((data) => {
-            if (predicate(data)) {
-                const responseData = response(data);
-                if (responseData) {
-                    this.outputToDevice.send(responseData);
-                }
-                return true;
-            }
-            return false;
-        });
+        this.handlerFunctions.push([predicate, response])
     }
 
     // Creates connection between device and interfaces
@@ -42,9 +33,23 @@ export default class Device {
         this.inputFromDevice = this.inputConnection.getConnectionFrom(Device.midiAccess.inputs);
         this.outputToDevice = this.outputConnection.getConnectionFrom(Device.midiAccess.outputs);
 
+        const output = this.outputToDevice;
+        const funcs = this.handlerFunctions;
+
+        console.log(output.send)
+
         // Sets up handler functions as callback for when messages are recieved
-        this.inputFromDevice.onmidimessage = ({ data }) => {
-            this.handlerFunctions.some(handlerFunction => handlerFunction(data));
+        this.inputFromDevice.onmidimessage = async function ({ data }) {
+            for (const [predicate, response] of funcs) {
+                if (predicate(data)) {
+                    const result = await response(data);
+                    console.log({ result })
+                    if (result) {
+                        output.send(result);
+                    }
+                    break;
+                }
+            }
         };
 
         // Initiates handshake

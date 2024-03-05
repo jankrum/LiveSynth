@@ -36,11 +36,14 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
     const partName = scorePart.querySelector('part-name').innerHTML.toUpperCase();
     const playerName = scorePart.querySelector('player-name').innerHTML;
 
-    const script = filesystem.scripts.find(scriptFile => scriptFile.name === playerName).script;
+    const scriptText = filesystem.scripts.find(scriptFile => scriptFile.name === playerName).script;
 
-    if (!script) {
+    if (!scriptText) {
         throw new Error('Could not find matching script');
     }
+
+    console.log(scriptText);
+    console.log(eval(scriptText));
 
     // The connection to the controller
     const controller = new Controller(partName);
@@ -54,7 +57,7 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
 
     await synthesizer.createConnection();
 
-    const result = { script, controller, synthesizer };
+    const result = { scriptText, controller, synthesizer };
 
     return result;
 }
@@ -96,6 +99,7 @@ function stopPlaying() {
 // Calculates and returns a MIDI sysex message containing
 // a JSON obj representing the state for the transport
 function sendTransportState() {
+    console.log('sending state');
     const stateToSend = {
         cannotPrevious: state.chartIndex <= 0,
         cannotPlay: state.playing,
@@ -105,11 +109,14 @@ function sendTransportState() {
         songTitle: filesystem.charts[state.chartIndex].title
     };
 
-    return Transporter.makeJsonSysexMessage(stateToSend);
+    const message = Device.makeJsonSysexMessage(stateToSend)
+    console.log({ message });
+    return message;
 }
 
 // Deals with button presses
-function dealWithTransporterButtonPresses(data) {
+async function dealWithTransporterButtonPresses(data) {
+    console.log({ data });
     switch (data[1]) {
         case PREVIOUS_CC:
             stopPlaying();
@@ -118,7 +125,7 @@ function dealWithTransporterButtonPresses(data) {
                 state.playing = false;
                 state.paused = false;
                 state.chartIndex -= 1;
-                loadChart();
+                await loadChart();
             }
             break;
         case PLAY_CC:
@@ -143,7 +150,7 @@ function dealWithTransporterButtonPresses(data) {
                 state.playing = false;
                 state.paused = false;
                 state.chartIndex += 1;
-                loadChart();
+                await loadChart();
             }
             break;
         case STOP_CC:
@@ -169,7 +176,7 @@ async function main() {
     transporter.addHandler(isButtonPress, dealWithTransporterButtonPresses);
 
     // Establishes the MIDI connection
-    transporter.createConnection();
+    await transporter.createConnection();
 
     loadChart();
 }

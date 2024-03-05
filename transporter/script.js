@@ -1,3 +1,7 @@
+import Device from '/namespaces/device.js';
+import { CC_HEADER, FULL, isSysexMessage } from '/namespaces/constants.js';
+import Sequencer from '/namespaces/sequencer.js';
+
 // Selectors for HTML elements
 const SELECTORS = {
     TRANSPORTER_DIV: '#transporterDiv',
@@ -42,7 +46,7 @@ function setUpTransporter(outputToSequencer) {
         button.onmousedown = () => {
             // Don't send anything if we haven't gotten a response
             if (!suppressPresses) {
-                outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, MIDI_CONSTANTS.FULL]);
+                outputToSequencer.send([CC_HEADER, commandChange, FULL]);
                 // Don't accept any more presses until we get a response
                 suppressPresses = true;
             }
@@ -50,7 +54,7 @@ function setUpTransporter(outputToSequencer) {
 
         // Let the controller know when we have released it (this doesn't really do anything)
         button.onmouseup = () => {
-            outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, 0]);
+            outputToSequencer.send([CC_HEADER, commandChange, 0]);
         }
     }
 
@@ -65,10 +69,12 @@ function setUpTransporter(outputToSequencer) {
 // Get the data from the SYSEX message and use it to update
 function dealWithSysex(data) {
     console.debug('Heard a sysex message');
-    const transporterState = UTILITIES.getObjectFromJsonSysex(data);
+    const transporterState = Sequencer.getObjectFromJsonSysex(data);
     updateTransporter(transporterState);
     // Start accepting presses again
     suppressPresses = false;
+
+    return false;
 }
 
 // Shows the transport
@@ -79,13 +85,13 @@ function showTransporter() {
 
 // For when the page is loaded
 async function main() {
-    await MidiDevice.initialize();
+    await Device.initialize();
 
     // The connection to the sequencer
     const sequencer = new Sequencer('Transporter');
 
     // Handler functions
-    sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
+    sequencer.addHandler(isSysexMessage, dealWithSysex);
 
     // Establishes the MIDI connection
     sequencer.createConnection();

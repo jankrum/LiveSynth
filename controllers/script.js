@@ -1,3 +1,7 @@
+import Device from '/namespaces/device.js';
+import { CC_HEADER, FULL, isSysexMessage } from '/namespaces/constants.js';
+import Sequencer from '/namespaces/sequencer.js';
+
 // Selectors for HTML elements
 const SELECTORS = {
     PART_NAME: '#part',
@@ -37,12 +41,14 @@ function updateController(controllerState) {
 // For a SYSEX message, get the changes we need to make, and make them
 function dealWithSysex(data) {
     try {
-        const { controllerState } = UTILITIES.getObjectFromJsonSysex(data);
+        const { controllerState } = Sequencer.getObjectFromJsonSysex(data);
         updateController(controllerState);
     } catch (error) {
         alert(error.message);
         console.error(error);
     }
+
+    return false;
 }
 
 // Make the controller actually transmit MIDI messages
@@ -54,7 +60,7 @@ function setUpController(outputToSequencer) {
 
         // When the knob is actually changed, send the value under its cc
         knobInput.onchange = () => {
-            outputToSequencer.send([MIDI_CONSTANTS.CC_HEADER, commandChange, knobInput.value]);
+            outputToSequencer.send([CC_HEADER, commandChange, knobInput.value]);
         };
     }
 
@@ -71,7 +77,7 @@ function showController() {
 
 // For when the page is loaded
 async function main() {
-    await MidiDevice.initialize();
+    await Device.initialize();
 
     const partName = document.querySelector(SELECTORS.PART_NAME).innerText.toUpperCase();
     const sourceName = partName + "Controller";
@@ -80,7 +86,7 @@ async function main() {
     const sequencer = new Sequencer(sourceName);
 
     // Handler functions
-    sequencer.addHandler(MIDI_CONSTANTS.isSysexMessage, dealWithSysex);
+    sequencer.addHandler(isSysexMessage, dealWithSysex);
 
     // Establishes the MIDI connection
     sequencer.createConnection();
