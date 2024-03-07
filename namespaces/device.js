@@ -36,14 +36,11 @@ export default class Device {
         const output = this.outputToDevice;
         const funcs = this.handlerFunctions;
 
-        console.log(output.send)
-
         // Sets up handler functions as callback for when messages are recieved
         this.inputFromDevice.onmidimessage = async function ({ data }) {
             for (const [predicate, response] of funcs) {
                 if (predicate(data)) {
                     const result = await response(data);
-                    console.log({ result })
                     if (result) {
                         output.send(result);
                     }

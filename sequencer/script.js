@@ -1,5 +1,5 @@
 import Device from '/namespaces/device.js';
-import { isLoopbackCall, isCommandCall, PREVIOUS_CC, PLAY_CC, PAUSE_CC, NEXT_CC, STOP_CC, isButtonPress } from '/namespaces/constants.js';
+import { RESET, isLoopbackCall, isCommandCall, PREVIOUS_CC, PLAY_CC, PAUSE_CC, NEXT_CC, STOP_CC, isButtonPress } from '/namespaces/constants.js';
 import Transporter from '/namespaces/transporter.js';
 import Controller from '/namespaces/controller.js';
 import Synthesizer from '/namespaces/synthesizer.js';
@@ -13,17 +13,8 @@ const state = {
 };
 
 // Calculates state for controller
-function sendControllerState() {
-    const controllerState = Array(12).fill().map((_, ind1) => {
-        const result = {
-            index: ind1,
-            labelArray: Array(128).fill().map((__, ind2) => `Module #${ind1 + 1}\nValue: ${ind2}!`)
-        }
-
-        return result;
-    })
-
-    return Controller.makeJsonSysexMessage({ controllerState });
+function makeSendControllerState(controllerState) {
+    return _ => [RESET, ...Device.makeJsonSysexMessage(controllerState)];
 }
 
 // Handles command calls from the controller
@@ -42,13 +33,13 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
         throw new Error('Could not find matching script');
     }
 
-    console.log(scriptText);
-    console.log(eval(scriptText));
+    const scriptObj = eval(scriptText);
+    console.log(scriptObj.controllerState);
 
     // The connection to the controller
     const controller = new Controller(partName);
 
-    controller.addHandler(isLoopbackCall, sendControllerState);
+    controller.addHandler(isLoopbackCall, makeSendControllerState(scriptObj));
     controller.addHandler(isCommandCall, dealWithControllerCommandCalls);
 
     await controller.createConnection();
@@ -77,7 +68,7 @@ async function loadChart() {
     const rawParts = chart.querySelectorAll('score-part');
     const parts = await Promise.all(Array.from(rawParts).map(getScriptControllerAndSynthesizerFromScorePart));
 
-    console.log({ parts });
+    // console.log({ parts });
 }
 
 function startPlaying() {
@@ -99,7 +90,6 @@ function stopPlaying() {
 // Calculates and returns a MIDI sysex message containing
 // a JSON obj representing the state for the transport
 function sendTransportState() {
-    console.log('sending state');
     const stateToSend = {
         cannotPrevious: state.chartIndex <= 0,
         cannotPlay: state.playing,
@@ -109,8 +99,7 @@ function sendTransportState() {
         songTitle: filesystem.charts[state.chartIndex].title
     };
 
-    const message = Device.makeJsonSysexMessage(stateToSend)
-    console.log({ message });
+    const message = Device.makeJsonSysexMessage(stateToSend);
     return message;
 }
 

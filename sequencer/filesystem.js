@@ -284,7 +284,7 @@ export default {
     'scripts': [
         {
             'name': 'dummy_player',
-            'script': '{controllerState: [{index: 0,staticLabel: \'Style: \',options: [\'Rock\',\'Jazz\',\'Disco\',\'Metal\']}]}'
+            'script': '({controllerState:[{prefix:\"Style: \",options:[\"Rock\",\"Jazz\",\"Disco\",\"Metal\"]},{prefix:\"Tempo: \",min:60,max:300,suffix:\" BPM\"}],composeScript(){console.log(\"I am writing stuff\")}});'
         },
         {
             'name': 'octave_jumper',
