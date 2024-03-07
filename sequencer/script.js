@@ -34,7 +34,7 @@ async function getScriptControllerAndSynthesizerFromScorePart(scorePart) {
     }
 
     const scriptObj = eval(scriptText);
-    console.log(scriptObj.controllerState);
+    // console.log(scriptObj.controllerState);
 
     // The connection to the controller
     const controller = new Controller(partName);
@@ -69,22 +69,24 @@ async function loadChart() {
     const parts = await Promise.all(Array.from(rawParts).map(getScriptControllerAndSynthesizerFromScorePart));
 
     // console.log({ parts });
+
+    return true;
 }
 
 function startPlaying() {
-    // pass
+    console.log('Started Playing');
 }
 
 function resumePlaying() {
-    // pass
+    console.log('Resumed Playing');
 }
 
 function pausePlaying() {
-    // pass
+    console.log('Paused Playing');
 }
 
 function stopPlaying() {
-    // pass
+    console.log('Stopped Playing');
 }
 
 // Calculates and returns a MIDI sysex message containing
@@ -105,12 +107,12 @@ function sendTransportState() {
 
 // Deals with button presses
 async function dealWithTransporterButtonPresses(data) {
-    console.log({ data });
+    // console.log({ data });
     switch (data[1]) {
         case PREVIOUS_CC:
-            stopPlaying();
             // Checks to make sure we aren't on the first chart
             if (state.chartIndex > 0) {
+                stopPlaying();
                 state.playing = false;
                 state.paused = false;
                 state.chartIndex -= 1;
@@ -127,15 +129,16 @@ async function dealWithTransporterButtonPresses(data) {
             }
             state.playing = true;
             state.paused = false;
+            break;
         case PAUSE_CC:
             pausePlaying();
             state.playing = false;
             state.paused = true;
             break;
         case NEXT_CC:
-            stopPlaying();
             // Checks to make sure we aren't on the last chart
-            if (state.chartIndex < state.charts.length - 1) {
+            if (state.chartIndex < filesystem.charts.length - 1) {
+                stopPlaying();
                 state.playing = false;
                 state.paused = false;
                 state.chartIndex += 1;
@@ -149,6 +152,7 @@ async function dealWithTransporterButtonPresses(data) {
             break;
     }
 
+    console.log({ state })
     // Send new state
     return sendTransportState();
 }
