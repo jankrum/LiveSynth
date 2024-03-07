@@ -67,10 +67,6 @@ async function loadChart() {
 
     const rawParts = chart.querySelectorAll('score-part');
     const parts = await Promise.all(Array.from(rawParts).map(getScriptControllerAndSynthesizerFromScorePart));
-
-    // console.log({ parts });
-
-    return true;
 }
 
 function startPlaying() {
@@ -152,7 +148,6 @@ async function dealWithTransporterButtonPresses(data) {
             break;
     }
 
-    console.log({ state })
     // Send new state
     return sendTransportState();
 }
