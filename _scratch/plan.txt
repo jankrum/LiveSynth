@@ -6,8 +6,10 @@ Boot and try to connect to transporter
             -Respond with Loopback call
         -Loopback calls
             -Respond with relevant state for transporter
+                -FSM has to be loaded for this
         -Button Presses
             -Consult the finite state machine and respond with new transporter state
+                -FSM has to be loaded for this
 
 The finite state machine is an object that has:
     -data:
@@ -20,12 +22,43 @@ The finite state machine is an object that has:
     -transitions
         -playing:
             -pause
+                -Send pause instruction to player and wait
+                -Set state to paused
+                -Send state
             -stop
+                -Send stop instruction to player and wait
+                -Set state to stopped
+                -Send state
         -paused:
             -play
+                -Send resume instruction to player and wait
+                -Set state to playing
+                -Send state
             -stop
+                -Send pause instruction to player and wait
+                -Set state to stopped
+                -Send state
         -stopped:
             -play
-    
+                -Send play instruction to player and wait
+                -Set state to playing
+                -Send state
+    -methods:
+        -sendState
+            -calculates and returns a SYSEX message representing transporter state
+        -previous
+            -Check if we can move previous
+            -If not stopped, send stop instruction to player and wait
+            -Load new chart into player and wait
+            -Decrement chartIndex
+            -Set state to stopped
+            -Send state
+        -next
+            -Check if we can move next
+            -If not stopped, send stop instruction to player and wait
+            -Load new chart into player and wait
+            -Increment chartIndex
+            -Set state to stopped
+            -Send state
 
-Load the first chart
+The player is an object that plays songs
