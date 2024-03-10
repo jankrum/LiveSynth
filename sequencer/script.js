@@ -1,6 +1,6 @@
 // import Device from '/namespaces/device.js';
 // import { RESET, isLoopbackCall, isCommandCall, PREVIOUS_CC, PLAY_CC, PAUSE_CC, NEXT_CC, STOP_CC } from '/namespaces/constants.js';
-import Fsm from './fsm.js';
+// import Fsm from './fsm.js';
 import Transporter from './transporter.js';
 // import Controller from './controller.js';
 // import Synthesizer from './synthesizer.js';
@@ -90,10 +90,10 @@ const player = {
 }
 
 
-const fsm = new Fsm(filesystem.charts, player);
+// const fsm = new Fsm(filesystem.charts, player);
 
 // The connection to the transporter
-const transporter = new Transporter(fsm);
+const transporter = new Transporter(filesystem.charts, player);
 
 // Establishes the MIDI connection
 await transporter.createConnection();
