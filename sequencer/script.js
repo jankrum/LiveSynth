@@ -86,7 +86,8 @@ const player = {
     },
     stop() {
         console.log('stopping');
-    }
+    },
+    transporter: null
 }
 
 
@@ -97,5 +98,7 @@ const transporter = new Transporter(filesystem.charts, player);
 
 // Establishes the MIDI connection
 await transporter.createConnection();
+
+console.log(player)
 
 // loadChart();

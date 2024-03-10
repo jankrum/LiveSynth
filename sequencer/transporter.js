@@ -46,6 +46,8 @@ export default class Transporter extends Peripheral {
 
         this.addHandler(isLoopbackCall, () => this.getState());
         this.addHandler(isButtonPress, (data) => this.handleButtonPress(data));
+
+        player.transporter = this;
     }
 
     // Sets state of FSM
