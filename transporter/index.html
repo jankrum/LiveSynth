@@ -13,18 +13,13 @@
     <hr>
 
     <div id="transporterDiv" style="display: none;">
-        <button id="prevBtn" class="transporterButton" property="disabled" command-change="115"
-            state-key="cannotPrevious" disabled> &lt; </button>
-        <button id="playBtn" class="transporterButton" property="disabled" command-change="116" state-key="cannotPlay"
-            disabled>Play</button>
-        <button id="pauseBtn" class="transporterButton" property="disabled" command-change="117" state-key="cannotPause"
-            disabled>Pause</button>
-        <button id="nextBtn" class="transporterButton" property="disabled" command-change="118" state-key="cannotNext"
-            disabled>&gt;</button>
-        <button id="stopBtn" class="transporterButton" property="disabled" command-change="119" state-key="cannotStop"
-            disabled>Stop</button>
+        <button id="prevBtn" class="transporterButton" command-change="115" disabled> &lt; </button>
+        <button id="playBtn" class="transporterButton" command-change="116" disabled>Play</button>
+        <button id="pauseBtn" class="transporterButton" command-change="117" disabled>Pause</button>
+        <button id="nextBtn" class="transporterButton" command-change="118" disabled>&gt;</button>
+        <button id="stopBtn" class="transporterButton" command-change="119" disabled>Stop</button>
 
-        <div id="displayText" class="text-display" property="innerHTML" state-key="songTitle" disabled>
+        <div id="displayText">
             <!-- Text from the sequencer will be displayed here -->
         </div>
     </div>

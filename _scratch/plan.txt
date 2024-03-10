@@ -1,6 +1,7 @@
 THE ROLE OF THE SEQUENCER
 
 Boot and try to connect to transporter
+    -Constructor takes in (func getTransportState, func applyFSM)
     -Prepare to respond to:
         -Loopback requests
             -Respond with Loopback call
@@ -12,53 +13,68 @@ Boot and try to connect to transporter
                 -FSM has to be loaded for this
 
 The finite state machine is an object that has:
-    -data:
-        -state: playing/paused/stopped
-        -filesystem:
-            -scripts: []
-            -charts: []
-        -chartIndex: 0
-        -chartsLength: num
+    -state: playing/paused/stopped
+    -filesystem:
+        -scripts: []
+        -charts: []
+    -chartIndex: 0
+    -chartsLength: num    
     -transitions
         -playing:
-            -pause
+            -pause()
                 -Send pause instruction to player and wait
                 -Set state to paused
-                -Send state
-            -stop
+                -Return state
+            -stop()
                 -Send stop instruction to player and wait
                 -Set state to stopped
-                -Send state
+                -Return state
         -paused:
-            -play
+            -play()
                 -Send resume instruction to player and wait
                 -Set state to playing
-                -Send state
-            -stop
+                -Return state
+            -stop()
                 -Send pause instruction to player and wait
                 -Set state to stopped
-                -Send state
+                -Return state
         -stopped:
-            -play
+            -play()
                 -Send play instruction to player and wait
                 -Set state to playing
-                -Send state
-    -methods:
-        -sendState
-            -calculates and returns a SYSEX message representing transporter state
-        -previous
-            -Check if we can move previous
-            -If not stopped, send stop instruction to player and wait
-            -Load new chart into player and wait
-            -Decrement chartIndex
-            -Set state to stopped
-            -Send state
-        -next
-            -Check if we can move next
-            -If not stopped, send stop instruction to player and wait
-            -Load new chart into player and wait
-            -Increment chartIndex
-            -Set state to stopped
-            -Send state
+                -Return state
+    -getState()
+        -calculates and returns a SYSEX message representing transporter state
+    -dispatch(actionName)
+        -return this.transitions[this.state][actionName];
+    -changeState(state)
+        -this.state = state;
+    -previous()
+        -Check if we can move previous
+        -If not stopped, send stop instruction to player and wait
+        -Decrement chartIndex
+        -Load new chart into player and wait
+        -Set state to stopped
+        -Return state
+    -next()
+        -Check if we can move next
+        -If not stopped, send stop instruction to player and wait
+        -Increment chartIndex
+        -Load new chart into player and wait
+        -Set state to stopped
+        -Return state
+    -stop()
+        -dispatch('stop');
+    -handlePress()
+        -Switch statement that switches based on the CC address, and calls on this
+        -Returns the new state
+The constructor: (obj filesystem, obj playerFuncs {load, play, resume, pause, stop} )
+
 
 The player is an object that plays songs
+    -Has these methods:
+        load
+        play
+        resume
+        pause
+        stop

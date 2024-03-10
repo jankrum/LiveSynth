@@ -1,5 +1,4 @@
 import Connection from '/namespaces/connection.js';
-import { SYSEX_HEADER, DEVICE_ID, SYSEX_TERMINATOR } from '/namespaces/constants.js';
 
 // A class for interacting with external MIDI devices
 export default class Device {
@@ -52,19 +51,7 @@ export default class Device {
         // Initiates handshake
         this.outputToDevice.send(this.handshakeInitiator);
     }
-
-    static makeJsonSysexMessage(objectToSend) {
-        const text = JSON.stringify(objectToSend);
-        const charArray = text.split('');
-        const byteArray = charArray.map(char => char.charCodeAt(0));
-        const sysexMessage = [SYSEX_HEADER, DEVICE_ID, ...byteArray, SYSEX_TERMINATOR];
-        return sysexMessage;
-    }
-
-    static getObjectFromJsonSysex(sysexMessage) {
-        const byteArray = sysexMessage.slice(2, -1);
-        const text = String.fromCharCode(...byteArray);
-        const objectFromMessage = JSON.parse(text);
-        return objectFromMessage;
-    }
 }
+
+// Initialize midiAccessObj
+await Device.initialize();
