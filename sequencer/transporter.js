@@ -11,35 +11,34 @@ export default class Transporter extends Peripheral {
         this.charts = charts;
         this.chartIndex = 0;  // The index of the current chart
         this.chartsLength = charts.length;
-        this.player = player;
 
-        const that = this;
+        this.player = player;
 
         this.transitions = {
             'playing': {
-                async pause() {
+                pause: async () => {
                     await player.pause();
-                    that.setState('paused');
+                    this.setState('paused');
                 },
-                async stop() {
+                stop: async () => {
                     await player.stop();
-                    that.setState('stopped');
+                    this.setState('stopped');
                 }
             },
             'paused': {
-                async play() {
+                play: async () => {
                     await player.resume();
-                    that.setState('playing');
+                    this.setState('playing');
                 },
-                async stop() {
+                stop: async () => {
                     await player.stop();
-                    that.setState('stopped');
+                    this.setState('stopped');
                 }
             },
             'stopped': {
-                async play() {
+                play: async () => {
                     await player.play();
-                    that.setState('playing');
+                    this.setState('playing');
                 }
             }
         }
@@ -48,6 +47,8 @@ export default class Transporter extends Peripheral {
         this.addHandler(isButtonPress, (data) => this.handleButtonPress(data));
 
         player.transporter = this;
+
+        player.load(charts[0]);
     }
 
     // Sets state of FSM
@@ -103,11 +104,11 @@ export default class Transporter extends Peripheral {
             case PAUSE_CC:
                 await this.dispatch('pause');
                 break;
-            case STOP_CC:
-                await this.dispatch('stop');
-                break;
             case NEXT_CC:
                 await this.next();
+                break;
+            case STOP_CC:
+                await this.dispatch('stop');
                 break;
         }
 
