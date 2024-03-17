@@ -1,80 +1,16 @@
-THE ROLE OF THE SEQUENCER
+THE LEADER
 
-Boot and try to connect to transporter
-    -Constructor takes in (func getTransportState, func applyFSM)
-    -Prepare to respond to:
-        -Loopback requests
-            -Respond with Loopback call
-        -Loopback calls
-            -Respond with relevant state for transporter
-                -FSM has to be loaded for this
-        -Button Presses
-            -Consult the finite state machine and respond with new transporter state
-                -FSM has to be loaded for this
-
-The finite state machine is an object that has:
-    -state: playing/paused/stopped
-    -filesystem:
-        -scripts: []
-        -charts: []
-    -chartIndex: 0
-    -chartsLength: num    
-    -transitions
-        -playing:
-            -pause()
-                -Send pause instruction to player and wait
-                -Set state to paused
-                -Return state
-            -stop()
-                -Send stop instruction to player and wait
-                -Set state to stopped
-                -Return state
-        -paused:
-            -play()
-                -Send resume instruction to player and wait
-                -Set state to playing
-                -Return state
-            -stop()
-                -Send pause instruction to player and wait
-                -Set state to stopped
-                -Return state
-        -stopped:
-            -play()
-                -Send play instruction to player and wait
-                -Set state to playing
-                -Return state
-    -getState()
-        -calculates and returns a SYSEX message representing transporter state
-    -dispatch(actionName)
-        -return this.transitions[this.state][actionName];
-    -changeState(state)
-        -this.state = state;
-    -previous()
-        -Check if we can move previous
-        -If not stopped, send stop instruction to player and wait
-        -Decrement chartIndex
-        -Load new chart into player and wait
-        -Set state to stopped
-        -Return state
-    -next()
-        -Check if we can move next
-        -If not stopped, send stop instruction to player and wait
-        -Increment chartIndex
-        -Load new chart into player and wait
-        -Set state to stopped
-        -Return state
+The leader is an object that plays songs
+It has this info:
+    -scripts
+        -The scripts portion of the filesystem
+    -synthesizersFound
+        -All of the synthesizers found so far
+    -controllersFound
+        -All of the controllers found so far
+    -load(chartToLoad)
+        -Parses the chart, figures out what controllers and synthesizers it needs to gather
+    -play()
+    -resume()
+    -pause()
     -stop()
-        -dispatch('stop');
-    -handlePress()
-        -Switch statement that switches based on the CC address, and calls on this
-        -Returns the new state
-The constructor: (obj filesystem, obj playerFuncs {load, play, resume, pause, stop} )
-
-
-The player is an object that plays songs
-    -Has these methods:
-        load
-        play
-        resume
-        pause
-        stop

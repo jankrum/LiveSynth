@@ -1,13 +1,14 @@
 // import { RESET, isLoopbackCall, isCommandCall, PREVIOUS_CC, PLAY_CC, PAUSE_CC, NEXT_CC, STOP_CC } from '/namespaces/constants.js';
 
-import Player from './player.js'
-import Transporter from './transporter.js';
 import filesystem from './filesystem.js';
+import Leader from './leader.js'
+import Transporter from './transporter.js';
 
-const player = new Player(filesystem.charts);
+const leader = new Leader(filesystem.scripts);
+const transporter = new Transporter(filesystem.charts, leader);
 
-// The connection to the transporter
-const transporter = new Transporter(filesystem.charts, player);
+// Load the first chart
+await leader.load(filesystem.charts[0]);
 
 // Establishes the MIDI connection
 await transporter.createConnection();
