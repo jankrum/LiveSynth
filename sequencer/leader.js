@@ -25,11 +25,10 @@ function extractPartAndPlayerName(part) {
         throw new Error('Chart missing player name');
     }
 
-    const partAndPlayerName = {
-        partName: partNameObj.innerHTML.toUpperCase(),
-        playerName: playerNameObj.innerHTML
-    };
+    const partName = partNameObj.innerHTML.toUpperCase();
+    const playerName = playerNameObj.innerHTML;
 
+    const partAndPlayerName = { partName, playerName };
     return partAndPlayerName;
 }
 
@@ -43,6 +42,26 @@ function getPartAndPlayerNames(chartObj) {
     const partAndPlayerNames = parts.map(extractPartAndPlayerName);
 
     return partAndPlayerNames;
+}
+
+async function getControllerForPart(part) {}
+
+async function getSynthesizerForPart(part) {}
+
+async function getControllerAndSynthesizerForPart(part) {
+
+}
+
+function getPlayerScriptFromScripts(scriptName, allScripts) {
+    const matchingName = script => script.name === scriptName;
+    const scriptFile = allScripts.find(matchingName);
+
+    if (!scriptFile) {
+        throw new Error(`Could not find script file for ${scriptName}`);
+    }
+
+    const scriptText = scriptFile.script;
+    return scriptText;
 }
 
 // // Calculates state for controller
@@ -88,8 +107,11 @@ export default class Leader {
     constructor(scripts) {
         this.scripts = scripts;
         this.transporter = null;
-        this.controllers = {};
-        this.synthesizers = {};
+        this.foundControllers = {};
+        this.foundSynthesizers = {};
+        this.currentChart = null;
+
+        this.players = [];
     }
 
     async load(chartToLoad) {
@@ -97,6 +119,8 @@ export default class Leader {
             const chartText = chartToLoad.body;
 
             const chart = parseXml(chartText);
+
+            this.currentChart = chart;
 
             const partAndPlayerNames = getPartAndPlayerNames(chart);
 

@@ -9,7 +9,8 @@ It has this info:
     -controllersFound
         -All of the controllers found so far
     -load(chartToLoad)
-        -Parses the chart, figures out what controllers and synthesizers it needs to gather
+        -Dismiss all current parts
+        -Find out what 
     -play()
     -resume()
     -pause()
